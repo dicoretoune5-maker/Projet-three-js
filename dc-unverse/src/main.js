@@ -14,11 +14,12 @@ light.position.set(10, 10, 10);
 scene.add(light);
 
 // --- CRÉATION DES ÉTOILES (Formation) ---
+const starArray = [];
 function addStars() {
   const geometry = new THREE.SphereGeometry(0.1, 24, 24);
   const material = new THREE.MeshBasicMaterial({ color: 0xffffff });
 
-  for (let i = 0; i < 500; i++) {
+  for (let i = 0; i < 1000; i++) {
     const star = new THREE.Mesh(geometry, material);
     // Positionnement aléatoire pour simuler l'immensité
     const [x, y, z] = Array(3).fill().map(() => THREE.MathUtils.randFloatSpread(100));
