@@ -43,6 +43,14 @@ function animate() {
   centralObject.rotation.y += 0.01;
   centralObject.rotation.z += 0.005;
 
+  // Animation des étoiles pour créer un effet de mouvement
+  // On parcourt les étoiles stockées
+  for (let i=0; i < starArray.length; i++) {
+    const star = starArray[i];
+    // Si l'étoile dépasse la caméra, on la replace loin derrère
+    if (star.position.z > 50) {
+      star.position.z = -150; // Repositionner loin derrière
+
   renderer.render(scene, camera);
 }
 
