@@ -25,6 +25,7 @@ function addStars() {
     const [x, y, z] = Array(3).fill().map(() => THREE.MathUtils.randFloatSpread(100));
     star.position.set(x, y, z);
     scene.add(star);
+    starArray.push(star);
   }
 }
 addStars();
