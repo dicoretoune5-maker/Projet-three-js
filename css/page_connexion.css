@@ -1,0 +1,148 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #0a192f;
+    /* Bleu encore plus sombre pour faire ressortir la lumière */
+    color: white;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+    position: relative;
+}
+
+/* EFFET SPOTLIGHT (Suivi de souris) */
+#spotlight {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    /* Pour pouvoir cliquer à travers */
+    background: radial-gradient(circle 150px at var(--x, 50%) var(--y, 50%),
+            rgba(90, 80, 44, 0.377) 0%,
+            transparent 100%);
+    z-index: 1;
+}
+
+.login-container {
+    position: relative;
+    z-index: 10;
+    width: 100%;
+    max-width: 400px;
+    text-align: center;
+}
+
+.logo {
+    width: 80px;
+    margin-bottom: 20px;
+}
+
+/* Boîte de formulaire */
+.form-box {
+    background: rgba(26, 51, 101, 0.8);
+    /* Bleu DC avec transparence */
+    padding: 40px;
+    border-radius: 15px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(10px);
+    /* Effet de flou derrière la boîte */
+}
+
+/* Onglets Connexion / Inscription */
+.tabs {
+    display: flex;
+    margin-bottom: 30px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.tab-btn {
+    flex: 1;
+    background: none;
+    border: none;
+    color: rgba(255, 255, 255, 0.5);
+    padding: 10px;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: all 0.3s;
+}
+
+.tab-btn.active {
+    color: white;
+    border-bottom: 2px solid #3b5998;
+}
+
+/* Champs de saisie */
+h2 {
+    margin-bottom: 25px;
+    font-size: 1.5rem;
+    letter-spacing: 1px;
+}
+
+.input-group {
+    text-align: left;
+    margin-bottom: 20px;
+}
+
+.input-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-size: 0.9rem;
+    color: #a0aec0;
+}
+
+.input-group input {
+    width: 100%;
+    padding: 12px;
+    background: rgba(10, 25, 47, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 8px;
+    color: white;
+    outline: none;
+    transition: border 0.3s;
+}
+
+.input-group input:focus {
+    border-color: #3b5998;
+}
+
+/* Bouton d'action */
+.btn-action {
+    width: 100%;
+    padding: 15px;
+    background-color: #3b5998;
+    border: none;
+    border-radius: 8px;
+    color: white;
+    font-size: 1.1rem;
+    font-weight: bold;
+    cursor: pointer;
+    margin-top: 10px;
+    transition: background 0.3s, transform 0.2s;
+}
+
+.btn-action:hover {
+    background-color: #4a69ad;
+    transform: translateY(-2px);
+}
+
+.back-link {
+    display: block;
+    margin-top: 25px;
+    color: rgba(255, 255, 255, 0.5);
+    text-decoration: none;
+    font-size: 0.9rem;
+    transition: color 0.3s;
+}
+
+.back-link:hover {
+    color: white;
+}
