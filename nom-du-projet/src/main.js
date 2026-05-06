@@ -3,15 +3,17 @@ import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { DRACOLoader } from "three/examples/jsm/loaders/DRACOLoader.js";
 
-// --- SCÈNE PRINCIPALE ---
+// ==========================================
+// 1. CONFIGURATION DE LA SCÈNE (PRINCIPALE)
+// ==========================================
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x000000);
 
-let mouseX = 0,
-  mouseY = 0;
-window.addEventListener("mousemove", (e) => {
-  mouseX = (e.clientX / window.innerWidth) * 2 - 1;
-  mouseY = -(e.clientY / window.innerHeight) * 2 + 1;
+let mouseX = 0;
+let mouseY = 0;
+window.addEventListener("mousemove", (event) => {
+  mouseX = (event.clientX / window.innerWidth) * 2 - 1;
+  mouseY = -(event.clientY / window.innerHeight) * 2 + 1;
 });
 
 const camera = new THREE.PerspectiveCamera(
@@ -20,36 +22,49 @@ const camera = new THREE.PerspectiveCamera(
   0.1,
   1000,
 );
-camera.position.z = 35; // On recule un peu pour mieux voir
+camera.position.z = 40;
 
 const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setSize(window.innerWidth, window.innerHeight);
+// On garde ça pour que le rendu soit net sur ton écran Retina
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 document.body.appendChild(renderer.domElement);
 
 scene.add(new THREE.AmbientLight(0xffffff, 2));
 
-// --- LA GALAXIE (RETOUR EN FORCE) ---
+// ==========================================
+// 2. LA GALAXIE (VERSION AFFINÉE ET PLUS RÉALISTE)
+// ==========================================
 const starGeometry = new THREE.BufferGeometry();
-const starCount = 6000;
-const posArray = new Float32Array(starCount * 3);
-for (let i = 0; i < starCount * 3; i++) {
-  posArray[i] = (Math.random() - 0.5) * 400; // Plus large
-}
-starGeometry.setAttribute("position", new THREE.BufferAttribute(posArray, 3));
+// On augmente un peu le nombre pour compenser la taille (10,000 au lieu de 6,000)
+const starCount = 10000;
+const positionArray = new Float32Array(starCount * 3);
 
-// On booste la taille (size: 1.0) et on s'assure qu'elles brillent
+// On disperse les étoiles sur une zone plus large pour la profondeur
+for (let i = 0; i < starCount * 3; i++) {
+  positionArray[i] = (Math.random() - 0.5) * 500;
+}
+starGeometry.setAttribute(
+  "position",
+  new THREE.BufferAttribute(positionArray, 3),
+);
+
+// J'AI CHANGÉ LA TAILLE ICI 👉 size: 0.3 (au lieu de 1.0)
+// On la rend aussi un peu moins opaque pour plus de douceur
 const starMaterial = new THREE.PointsMaterial({
-  size: 1.0,
+  size: 0.3, // Plus petites pour la profondeur
   color: 0xffffff,
   transparent: true,
-  opacity: 0.9,
-  sizeAttenuation: true,
+  opacity: 0.6, // Un peu plus discret
+  sizeAttenuation: true, // Important pour que les étoiles lointaines paraissent plus petites
 });
+
 const starParticles = new THREE.Points(starGeometry, starMaterial);
 scene.add(starParticles);
 
-// --- CHARGEMENT ---
+// ==========================================
+// 3. CHARGEMENT DES OBJETS 3D (Les Héros)
+// ==========================================
 const loader = new GLTFLoader();
 const dracoLoader = new DRACOLoader();
 dracoLoader.setDecoderPath(
@@ -85,12 +100,13 @@ character.forEach(({ file, position, scale }) => {
 });
 
 const controls = new OrbitControls(camera, renderer.domElement);
-controls.enableDamping = true;
+controls.enableDamping = true; // Pour plus de fluidité
 
+// Boucle d'animation principale
 function animate() {
   requestAnimationFrame(animate);
 
-  // Animation galaxie
+  // Animation de fond
   starParticles.rotation.y -= 0.0003;
 
   // Inclinaison de la scène avec la souris
@@ -100,7 +116,6 @@ function animate() {
   const time = Date.now() * 0.001;
   loadedObjects.forEach((obj, i) => {
     obj.position.y += Math.sin(time + i) * 0.005;
-    obj.rotation.y += 0.002; // Les objets tournent un peu sur eux-mêmes
   });
 
   controls.update();
@@ -109,7 +124,7 @@ function animate() {
 animate();
 
 // ==========================================
-// LE MINI-VIEWER (POUR LE POP-UP)
+// 4. MINI-MOTEUR 3D POUR LE POP-UP
 // ==========================================
 let miniRenderer, miniScene, miniCamera, miniControls, miniAnimId;
 
@@ -121,16 +136,15 @@ function setupMiniViewer(container, file) {
   miniScene.background = new THREE.Color(0x0a192f);
 
   const rect = container.getBoundingClientRect();
-  miniCamera = new THREE.PerspectiveCamera(
-    45,
-    rect.width / rect.height,
-    0.1,
-    100,
-  );
+  // On s'assure que la largeur et la hauteur ne sont pas nulles
+  const width = rect.width || 120;
+  const height = rect.height || 120;
+
+  miniCamera = new THREE.PerspectiveCamera(45, width / height, 0.1, 100);
   miniCamera.position.z = 5;
 
   miniRenderer = new THREE.WebGLRenderer({ antialias: true });
-  miniRenderer.setSize(rect.width, rect.height);
+  miniRenderer.setSize(width, height);
   container.appendChild(miniRenderer.domElement);
 
   miniScene.add(new THREE.AmbientLight(0xffffff, 2.5));
@@ -145,10 +159,12 @@ function setupMiniViewer(container, file) {
     const model = gltf.scene;
     miniScene.add(model);
 
+    // Auto-centrage de l'objet
     const box = new THREE.Box3().setFromObject(model);
     const center = box.getCenter(new THREE.Vector3());
     model.position.sub(center);
 
+    // On adapte la caméra pour que l'objet remplisse bien le carré
     const size = box.getSize(new THREE.Vector3());
     const maxDim = Math.max(size.x, size.y, size.z);
     miniCamera.position.z = maxDim * 2.8;
@@ -173,7 +189,7 @@ function cleanupMiniViewer() {
 }
 
 // ==========================================
-// LOGIQUE DE JEU
+// 5. MÉCANIQUE DE JEU (CLIC & VALIDATION)
 // ==========================================
 const corectAnswers = {
   "superman.glb": ["superman"],
@@ -187,7 +203,7 @@ const corectAnswers = {
   "masque de bane.glb": ["bane"],
   "Masque de Fathe.glb": ["doctor fate"],
   "massue hawkman (1).glb": ["hawkman"],
-  "wonde woman lasso.glb": ["wonder woman"],
+  "wonder woman lasso.glb": ["wonder woman"],
 };
 
 let currentObjectFile = "",
@@ -197,8 +213,10 @@ const pointer = new THREE.Vector2();
 
 window.addEventListener("click", (event) => {
   if (document.getElementById("game-popup").style.display === "flex") return;
+
   pointer.x = (event.clientX / window.innerWidth) * 2 - 1;
   pointer.y = -(event.clientY / window.innerHeight) * 2 + 1;
+
   raycaster.setFromCamera(pointer, camera);
   const intersects = raycaster.intersectObjects(loadedObjects, true);
 
@@ -212,6 +230,7 @@ window.addEventListener("click", (event) => {
       const popup = document.getElementById("game-popup");
       popup.style.display = "flex";
 
+      // Micro-délai pour laisser le temps au pop-up de s'ouvrir
       setTimeout(() => {
         setupMiniViewer(
           document.getElementById("mini-viewer"),
@@ -226,30 +245,41 @@ window.addEventListener("click", (event) => {
   }
 });
 
+// Bouton Valider
 document.getElementById("btn-valider").addEventListener("click", () => {
-  const val = document.getElementById("hero-input").value.toLowerCase().trim();
-  if (corectAnswers[currentObjectFile]?.includes(val)) {
-    document.getElementById("feedback-msg").innerText = "Bravo !";
+  const userInput = document
+    .getElementById("hero-input")
+    .value.toLowerCase()
+    .trim();
+  const popup = document.getElementById("game-popup");
+
+  if (corectAnswers[currentObjectFile]?.includes(userInput)) {
+    document.getElementById("feedback-msg").innerText =
+      "Bravo ! C'est le bon héros.";
     document.getElementById("feedback-msg").style.color = "#4ade80";
     score++;
-    loadedObjects.forEach((o) => {
-      if (o.userData.name === currentObjectFile) o.visible = false;
+    loadedObjects.forEach((obj) => {
+      if (obj.userData.name === currentObjectFile) obj.visible = false;
     });
+
     setTimeout(() => {
-      document.getElementById("game-popup").style.display = "none";
+      popup.style.display = "none";
       cleanupMiniViewer();
-    }, 1200);
+      if (score === character.length) window.location.href = "page_de_fin.html";
+    }, 1500);
   } else {
-    document.getElementById("feedback-msg").innerText = "Faux !";
+    document.getElementById("feedback-msg").innerText = "Dommage, réessaie !";
     document.getElementById("feedback-msg").style.color = "#f87171";
   }
 });
 
+// Croix de fermeture
 document.getElementById("close-popup").addEventListener("click", () => {
   document.getElementById("game-popup").style.display = "none";
   cleanupMiniViewer();
 });
 
+// Redimensionnement
 window.addEventListener("resize", () => {
   camera.aspect = window.innerWidth / window.innerHeight;
   camera.updateProjectionMatrix();

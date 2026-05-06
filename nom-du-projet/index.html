@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Find the Hero - DC</title>
+  <title>DC Game - Univers 3D</title>
   <link rel="stylesheet" href="popup_reponse.css">
   <link rel="stylesheet" href="style.css">
 </head>
@@ -14,9 +14,7 @@
 
   <div id="game-popup" class="overlay">
     <div class="quiz-card">
-
       <button id="close-popup" class="close-btn">&times;</button>
-
       <div class="object-preview" id="mini-viewer"></div>
 
       <div class="quiz-content">
@@ -27,12 +25,10 @@
           <input type="text" id="hero-input" placeholder="Entrez le nom du héros..." autocomplete="off">
           <div class="input-glow"></div>
         </div>
-
         <p class="hint">Appuie sur Entrée pour valider</p>
         <button id="btn-valider" style="display: none;">Valider</button>
         <div id="feedback-msg" class="feedback"></div>
       </div>
-
     </div>
   </div>
 
@@ -42,8 +38,7 @@
     document.addEventListener('DOMContentLoaded', () => {
       const input = document.getElementById('hero-input');
       const btn = document.getElementById('btn-valider');
-
-      input.addEventListener('keypress', function (e) {
+      input.addEventListener('keypress', (e) => {
         if (e.key === 'Enter') {
           e.preventDefault();
           btn.click();
