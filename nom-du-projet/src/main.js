@@ -71,3 +71,26 @@ const controls = new OrbitControls(camera, renderer.domElement);
 // --- BOUCLE D'ANIMATION ---
 function animate() {
   requestAnimationFrame(animate);
+
+  // Animation des étoiles pour créer un effet de mouvement
+  // On parcourt les étoiles stockées
+  for (let i=0; i < starArray.length; i++) {
+    const star = starArray[i];
+    star.position.z += 0.5; // Avance les étoiles vers la caméra
+    // Si l'étoile dépasse la caméra, on la replace loin derrère
+    if (star.position.z > 50) {
+      star.position.z = -150; // Repositionner loin derrière
+    }
+  }
+  controls.update();
+  renderer.render(scene, camera);
+}
+
+// Gérer le redimensionnement de la fenêtre
+window.addEventListener('resize', () => {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+});
+
+animate();
