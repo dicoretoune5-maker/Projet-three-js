@@ -34,9 +34,14 @@ signupTab.addEventListener("click", () => {
 
 // 3. SIMULATION DE CONNEXION
 document.getElementById("auth-form").addEventListener("submit", (e) => {
+  // 1. On empêche la page de se recharger dans le vide
   e.preventDefault();
+
+  // 2. Ton message de succès
   alert(
     "Bravo ! Votre progression est maintenant sauvegardée. Préparez-vous à jouer !",
   );
-  // Ici, on pourrait rediriger vers le jeu
+
+  // 3. LA REDIRECTION MAGIQUE vers ta page 3D (index.html)
+  window.location.href = "index.html";
 });

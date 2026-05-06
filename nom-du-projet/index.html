@@ -1,13 +1,30 @@
 <!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>nom-du-projet</title>
-  </head>
-  <body>
-    <div id="app"></div>
-    <script type="module" src="/src/main.js"></script>
-  </body>
+<html lang="fr">
+
+<head>
+  <meta charset="UTF-8" />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Find the Hero - DC</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+  <div id="app"></div>
+
+  <div id="game-popup" style="display: none;">
+    <div class="popup-content">
+      <span id="close-popup" style="cursor:pointer; float:right;">&times;</span>
+      <img id="obj-preview" src="" alt="" style="width: 100px; display: none; margin: 0 auto;">
+
+      <h2 id="popup-title">À quel héros appartient cet objet ?</h2>
+      <input type="text" id="hero-input" placeholder="Entrez le nom du héros...">
+      <button id="btn-valider">Valider</button>
+      <p id="feedback-msg"></p>
+    </div>
+  </div>
+
+  <script type="module" src="/src/main.js"></script>
+</body>
+
 </html>
