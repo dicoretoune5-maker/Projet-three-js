@@ -16,3 +16,42 @@ scene.add(new THREE.AmbientLight(0xffffff, 1.5)); // Lumière ambiante pour adou
 const light = new THREE.PointLight(0xffffff, 100);
 light.position.set(10, 10, 10);
 scene.add(light);
+
+// --- CRÉATION DES ÉTOILES (Formation) ---
+const starArray = [];
+function addStars() {
+  const geometry = new THREE.SphereGeometry(0.1, 24, 24);
+  const material = new THREE.MeshBasicMaterial({ color: 0xffffff });
+
+  for (let i = 0; i < 1000; i++) {
+    const star = new THREE.Mesh(geometry, material);
+    // Positionnement aléatoire pour simuler l'immensité
+    const [x, y, z] = Array(3).fill().map(() => THREE.MathUtils.randFloatSpread(100));
+    star.position.set(x, y, z);
+    scene.add(star);
+    starArray.push(star);
+  }
+}
+addStars();
+// --- CHARGEMENT DU OBJET 3D ---
+import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js';
+const loader = new GLTFLoader();
+const dracoLoader = new DRACOLoader();
+dracoLoader.setDecoderPath('https://www.gstatic.com/draco/versioned/decoders/1.5.6/');
+loader.setDRACOLoader(dracoLoader);
+const character = [ 
+  { file: 'superman.glb', position: [1, 20, -12], scale: 3 },
+  { file: 'Aquaman_tridant.glb', position: [20, 5, -10], scale: 2 },
+  { file: 'arc_de_arrow.glb', position: [-20, -5, 10], scale: 5 },
+  { file: 'bague_de_flash.glb', position: [10, 15, -20], scale: 5 },
+  { file: 'cape_de_raven.glb', position: [10, -15, 20], scale: 5},
+  { file: 'costume_nightwing.glb', position: [25, 0, 15], scale: 2 },
+  { file: 'deathstrke_mask.glb', position: [-25, 10, -15], scale: 2 },
+  { file: 'Lobo_moto.glb', position: [15, -20, 5], scale: 1 },
+  { file: 'masque_de_bane.glb', position: [-15, 20, -5], scale: 5 },
+  { file: 'Masque_de_Fathe.glb', position: [30, -10, 0], scale: 5 },
+  { file: 'massue_hawkman.glb', position: [-30, 10, 0], scale: 5 },
+  { file: 'wonde_woman_lasso.glb', position: [0, 25, -10], scale: 5 },
+];
+character.forEach(({ file, position, scale }) => {
+  loader.load(
