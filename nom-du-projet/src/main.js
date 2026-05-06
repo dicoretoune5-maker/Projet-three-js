@@ -3,19 +3,17 @@ import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { DRACOLoader } from "three/examples/jsm/loaders/DRACOLoader.js";
 
-// --- CRÉATION DE L'UNIVERS (LA SCÈNE) ---
+// --- SCÈNE PRINCIPALE ---
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x000000);
 
-// --- VARIABLES POUR L'INTERACTIVITÉ SOURIS ---
-let mouseX = 0;
-let mouseY = 0;
-window.addEventListener("mousemove", (event) => {
-  mouseX = (event.clientX / window.innerWidth) * 2 - 1;
-  mouseY = -(event.clientY / window.innerHeight) * 2 + 1;
+let mouseX = 0,
+  mouseY = 0;
+window.addEventListener("mousemove", (e) => {
+  mouseX = (e.clientX / window.innerWidth) * 2 - 1;
+  mouseY = -(e.clientY / window.innerHeight) * 2 + 1;
 });
 
-// --- CRÉATION DE LA CAMÉRA ---
 const camera = new THREE.PerspectiveCamera(
   75,
   window.innerWidth / window.innerHeight,
@@ -28,36 +26,32 @@ const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
 
-// --- AJOUT DE LUMIÈRE ---
 scene.add(new THREE.AmbientLight(0xffffff, 1.5));
 const light = new THREE.PointLight(0xffffff, 100);
 light.position.set(10, 10, 10);
 scene.add(light);
 
-// --- CRÉATION DES ÉTOILES ---
+// ÉTOILES
 const starGeometry = new THREE.BufferGeometry();
-const starCount = 5000;
-const positionArray = new Float32Array(starCount * 3);
-
-for (let i = 0; i < starCount * 3; i++) {
+const positionArray = new Float32Array(5000 * 3);
+for (let i = 0; i < 5000 * 3; i++)
   positionArray[i] = (Math.random() - 0.5) * 300;
-}
 starGeometry.setAttribute(
   "position",
   new THREE.BufferAttribute(positionArray, 3),
 );
-
-const starMaterial = new THREE.PointsMaterial({
-  size: 0.3,
-  color: 0xffffff,
-  transparent: true,
-  opacity: 0.8,
-  sizeAttenuation: true,
-});
-const starParticles = new THREE.Points(starGeometry, starMaterial);
+const starParticles = new THREE.Points(
+  starGeometry,
+  new THREE.PointsMaterial({
+    size: 0.3,
+    color: 0xffffff,
+    transparent: true,
+    opacity: 0.8,
+  }),
+);
 scene.add(starParticles);
 
-// --- CHARGEMENT DES OBJETS 3D ---
+// CHARGEMENT
 const loader = new GLTFLoader();
 const dracoLoader = new DRACOLoader();
 dracoLoader.setDecoderPath(
@@ -66,7 +60,6 @@ dracoLoader.setDecoderPath(
 loader.setDRACOLoader(dracoLoader);
 
 const loadedObjects = [];
-
 const character = [
   { file: "superman.glb", position: [0, 8, -10], scale: 3 },
   { file: "wonde woman lasso.glb", position: [0, -6, -5], scale: 5 },
@@ -83,57 +76,93 @@ const character = [
 ];
 
 character.forEach(({ file, position, scale }) => {
-  loader.load(
-    `./${file}`,
-    (gltf) => {
-      const obj = gltf.scene;
-      obj.position.set(...position);
-      obj.scale.setScalar(scale);
-
-      // L'étiquette magique pour reconnaître l'objet au clic !
-      obj.userData.name = file;
-
-      scene.add(obj);
-      loadedObjects.push(obj);
-    },
-    undefined,
-    (error) => console.error(`Erreur avec le fichier ${file}:`, error),
-  );
+  loader.load(`./${file}`, (gltf) => {
+    const obj = gltf.scene;
+    obj.position.set(...position);
+    obj.scale.setScalar(scale);
+    obj.userData.name = file;
+    scene.add(obj);
+    loadedObjects.push(obj);
+  });
 });
 
 const controls = new OrbitControls(camera, renderer.domElement);
 
-// --- BOUCLE D'ANIMATION ---
 function animate() {
   requestAnimationFrame(animate);
-
   starParticles.rotation.y -= 0.0005;
-  starParticles.rotation.x -= 0.0002;
-
   scene.rotation.y += (mouseX * 0.1 - scene.rotation.y) * 0.05;
-  scene.rotation.x += (-mouseY * 0.1 - scene.rotation.x) * 0.05;
-
   const time = Date.now() * 0.001;
-  loadedObjects.forEach((obj, index) => {
-    obj.position.y += Math.sin(time + index) * 0.005;
+  loadedObjects.forEach((obj, i) => {
+    obj.position.y += Math.sin(time + i) * 0.005;
   });
-
   controls.update();
   renderer.render(scene, camera);
 }
-
-window.addEventListener("resize", () => {
-  camera.aspect = window.innerWidth / window.innerHeight;
-  camera.updateProjectionMatrix();
-  renderer.setSize(window.innerWidth, window.innerHeight);
-});
-
 animate();
 
 // ==========================================
-// MÉCANIQUE DE JEU ET RAYCASTER
+// MINI-MOTEUR 3D POUR LE POP-UP
 // ==========================================
+let miniRenderer, miniScene, miniCamera, miniControls, miniAnimId;
 
+function setupMiniViewer(container, file) {
+  cleanupMiniViewer(); // On nettoie l'ancien avant de créer
+
+  miniScene = new THREE.Scene();
+  const rect = container.getBoundingClientRect();
+
+  miniCamera = new THREE.PerspectiveCamera(
+    45,
+    rect.width / rect.height,
+    0.1,
+    100,
+  );
+  miniCamera.position.z = 5;
+
+  miniRenderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+  miniRenderer.setSize(rect.width, rect.height);
+  container.appendChild(miniRenderer.domElement);
+
+  miniScene.add(new THREE.AmbientLight(0xffffff, 2));
+
+  miniControls = new OrbitControls(miniCamera, miniRenderer.domElement);
+  miniControls.enableZoom = false;
+
+  loader.load(`./${file}`, (gltf) => {
+    const model = gltf.scene;
+    miniScene.add(model);
+
+    // Auto-centrage de l'objet
+    const box = new THREE.Box3().setFromObject(model);
+    const center = box.getCenter(new THREE.Vector3());
+    model.position.sub(center);
+
+    const size = box.getSize(new THREE.Vector3());
+    const maxDim = Math.max(size.x, size.y, size.z);
+    miniCamera.position.z = maxDim * 2.5;
+  });
+
+  function miniAnimate() {
+    miniAnimId = requestAnimationFrame(miniAnimate);
+    miniControls.update();
+    miniRenderer.render(miniScene, miniCamera);
+  }
+  miniAnimate();
+}
+
+function cleanupMiniViewer() {
+  if (miniAnimId) cancelAnimationFrame(miniAnimId);
+  if (miniRenderer) {
+    miniRenderer.dispose();
+    miniRenderer.domElement.remove();
+  }
+  miniScene = null;
+}
+
+// ==========================================
+// MÉCANIQUE DE JEU
+// ==========================================
 const corectAnswers = {
   "superman.glb": ["superman", "clark kent"],
   "Aquaman tridant.glb": ["aquaman", "arthur curry"],
@@ -149,14 +178,12 @@ const corectAnswers = {
   "wonde woman lasso.glb": ["wonder woman", "diana prince"],
 };
 
-let currentObjectFile = "";
-let score = 0;
-
+let currentObjectFile = "",
+  score = 0;
 const raycaster = new THREE.Raycaster();
 const pointer = new THREE.Vector2();
 
 window.addEventListener("click", (event) => {
-  // Changement ici : On vérifie si c'est déjà affiché en flex
   if (document.getElementById("game-popup").style.display === "flex") return;
 
   pointer.x = (event.clientX / window.innerWidth) * 2 - 1;
@@ -167,18 +194,19 @@ window.addEventListener("click", (event) => {
 
   if (intersects.length > 0) {
     let clickedObj = intersects[0].object;
-
-    while (clickedObj.parent && !clickedObj.userData.name) {
+    while (clickedObj.parent && !clickedObj.userData.name)
       clickedObj = clickedObj.parent;
-    }
 
     if (clickedObj.userData.name) {
       currentObjectFile = clickedObj.userData.name;
-
       const popup = document.getElementById("game-popup");
-
-      // MODIFICATION VITAL POUR LE CENTRAGE : On utilise 'flex' au lieu de 'block'
       popup.style.display = "flex";
+
+      // LANCEMENT DU MINI-VIEWER
+      setupMiniViewer(
+        document.getElementById("mini-viewer"),
+        currentObjectFile,
+      );
 
       document.getElementById("feedback-msg").innerText = "";
       document.getElementById("hero-input").value = "";
@@ -194,26 +222,19 @@ document.getElementById("btn-valider").addEventListener("click", () => {
     .trim();
   const popup = document.getElementById("game-popup");
 
-  if (
-    corectAnswers[currentObjectFile] &&
-    corectAnswers[currentObjectFile].includes(userInput)
-  ) {
+  if (corectAnswers[currentObjectFile]?.includes(userInput)) {
     document.getElementById("feedback-msg").innerText =
       "Bravo ! C'est le bon héros.";
     document.getElementById("feedback-msg").style.color = "#4ade80";
     score++;
-
     loadedObjects.forEach((obj) => {
-      if (obj.userData.name === currentObjectFile) {
-        obj.visible = false;
-      }
+      if (obj.userData.name === currentObjectFile) obj.visible = false;
     });
 
     setTimeout(() => {
       popup.style.display = "none";
-      if (score === character.length) {
-        window.location.href = "page_de_fin.html";
-      }
+      cleanupMiniViewer();
+      if (score === character.length) window.location.href = "page_de_fin.html";
     }, 1500);
   } else {
     document.getElementById("feedback-msg").innerText = "Dommage, réessaie !";
@@ -223,4 +244,11 @@ document.getElementById("btn-valider").addEventListener("click", () => {
 
 document.getElementById("close-popup").addEventListener("click", () => {
   document.getElementById("game-popup").style.display = "none";
+  cleanupMiniViewer();
+});
+
+window.addEventListener("resize", () => {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
 });

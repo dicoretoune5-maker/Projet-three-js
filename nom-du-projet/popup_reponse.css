@@ -5,7 +5,6 @@
     box-sizing: border-box;
 }
 
-/* On s'assure que la 3D prend tout l'écran en fond */
 body {
     font-family: 'Segoe UI', sans-serif;
     background-color: #050a14;
@@ -14,7 +13,7 @@ body {
     overflow: hidden;
 }
 
-/* OVERLAY (Le fond sombre qui centre ton pop-up) */
+/* OVERLAY MODIFIÉ : On force display flex pour le centrage */
 #game-popup {
     position: fixed;
     top: 0;
@@ -23,16 +22,13 @@ body {
     height: 100%;
     background: rgba(0, 0, 0, 0.85);
     display: none;
-    /* Piloté par le JS */
+    /* Piloté par le JS en mode 'flex' */
     justify-content: center;
-    /* Centre horizontalement */
     align-items: center;
-    /* Centre verticalement */
     z-index: 10000;
     backdrop-filter: blur(5px);
 }
 
-/* TA CARTE D'ÉNIGME ORIGINALE */
 .quiz-card {
     background: linear-gradient(145deg, #1a3365, #0a192f);
     width: 90%;
@@ -58,7 +54,6 @@ body {
     }
 }
 
-/* TA CROIX DE FERMETURE */
 .close-btn {
     position: absolute;
     top: 15px;
@@ -71,13 +66,10 @@ body {
     opacity: 0.5;
 }
 
-.close-btn:hover {
-    opacity: 1;
-}
-
 .object-preview {
-    width: 100px;
-    height: 100px;
+    width: 120px;
+    /* Un peu plus grand pour la 3D */
+    height: 120px;
     background: rgba(255, 255, 255, 0.05);
     margin: 0 auto 25px;
     border-radius: 15px;
@@ -85,6 +77,15 @@ body {
     justify-content: center;
     align-items: center;
     border: 1px solid rgba(255, 255, 255, 0.1);
+    overflow: hidden;
+    /* Important pour le canvas */
+}
+
+/* MODIFICATION ICI : On force le canvas 3D à remplir le carré */
+#mini-viewer canvas {
+    width: 100% !important;
+    height: 100% !important;
+    outline: none;
 }
 
 .subtitle {
@@ -99,7 +100,6 @@ h2 {
     font-weight: 600;
 }
 
-/* TON CHAMP DE SAISIE STYLISÉ */
 #hero-input {
     width: 100%;
     padding: 15px;
@@ -124,7 +124,6 @@ h2 {
     margin-top: 10px;
 }
 
-/* FEEDBACK (Le message de validation) */
 #feedback-msg {
     margin-top: 20px;
     font-weight: bold;

@@ -5,24 +5,19 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Find the Hero - DC</title>
-
   <link rel="stylesheet" href="popup_reponse.css">
-
   <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
   <div id="app"></div>
 
-  <div id="game-popup" class="overlay"
-    style="display: none; position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 9999;">
+  <div id="game-popup" class="overlay">
     <div class="quiz-card">
 
       <button id="close-popup" class="close-btn">&times;</button>
 
-      <div class="object-preview">
-        <img id="quiz-img" src="" alt="Objet" style="display: none;">
-      </div>
+      <div class="object-preview" id="mini-viewer"></div>
 
       <div class="quiz-content">
         <p class="subtitle">À quel héros appartient cet objet ?</p>
@@ -34,9 +29,7 @@
         </div>
 
         <p class="hint">Appuie sur Entrée pour valider</p>
-
         <button id="btn-valider" style="display: none;">Valider</button>
-
         <div id="feedback-msg" class="feedback"></div>
       </div>
 
@@ -46,7 +39,6 @@
   <script type="module" src="/src/main.js"></script>
 
   <script>
-    // Ce script écoute le clavier. Si tu appuies sur "Entrée", il clique sur le bouton invisible pour toi.
     document.addEventListener('DOMContentLoaded', () => {
       const input = document.getElementById('hero-input');
       const btn = document.getElementById('btn-valider');
@@ -54,7 +46,7 @@
       input.addEventListener('keypress', function (e) {
         if (e.key === 'Enter') {
           e.preventDefault();
-          btn.click(); // Déclenche la vérification dans main.js
+          btn.click();
         }
       });
     });
