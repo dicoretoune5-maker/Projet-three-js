@@ -55,3 +55,19 @@ const character = [
 ];
 character.forEach(({ file, position, scale }) => {
   loader.load(
+loader.load(
+    ⁠ /${file} ⁠,
+    (gltf) => {
+      const obj = gltf.scene;
+      obj.position.set(...position);
+      obj.scale.setScalar(scale);
+      scene.add(obj);
+    },
+undefined, 
+(error) => console.error(⁠ Erreur: ${file} ⁠, error)
+);
+});
+const controls = new OrbitControls(camera, renderer.domElement);
+// --- BOUCLE D'ANIMATION ---
+function animate() {
+  requestAnimationFrame(animate);
