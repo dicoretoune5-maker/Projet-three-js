@@ -120,3 +120,13 @@ function animate() {
   controls.update();
   renderer.render(scene, camera);
 }
+
+// Gérer le redimensionnement de la fenêtre
+window.addEventListener('resize', () => {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+});
+
+// Lancement de l'animation
+animate();
