@@ -1,0 +1,180 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', sans-serif;
+    background-color: #050a14;
+    color: white;
+    height: 100vh;
+    overflow: hidden;
+}
+
+.galaxy-bg {
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(circle at center, #1a3365 0%, #050a14 100%);
+    position: relative;
+}
+
+.instruction {
+    position: absolute;
+    top: 20px;
+    width: 100%;
+    text-align: center;
+    color: rgba(255, 255, 255, 0.5);
+}
+
+/* Objets factices dans le jeu */
+.game-object {
+    position: absolute;
+    top: 40%;
+    left: 20%;
+    cursor: pointer;
+    text-align: center;
+    transition: transform 0.3s;
+}
+
+.game-object:hover {
+    transform: scale(1.1);
+}
+
+.game-object img {
+    width: 60px;
+    filter: drop-shadow(0 0 10px #3b5998);
+}
+
+/* OVERLAY (Le fond sombre derrière le pop-up) */
+.overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.85);
+    display: none;
+    /* Caché par défaut */
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    backdrop-filter: blur(5px);
+}
+
+/* CARTE D'ÉNIGME (Le Pop-up) */
+.quiz-card {
+    background: linear-gradient(145deg, #1a3365, #0a192f);
+    width: 90%;
+    max-width: 450px;
+    padding: 40px;
+    border-radius: 20px;
+    position: relative;
+    border: 1px solid rgba(59, 89, 152, 0.5);
+    box-shadow: 0 0 40px rgba(59, 89, 152, 0.3);
+    text-align: center;
+    animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes popIn {
+    from {
+        transform: scale(0.8);
+        opacity: 0;
+    }
+
+    to {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+.close-btn {
+    position: absolute;
+    top: 15px;
+    right: 20px;
+    background: none;
+    border: none;
+    color: white;
+    font-size: 2rem;
+    cursor: pointer;
+    opacity: 0.5;
+}
+
+.close-btn:hover {
+    opacity: 1;
+}
+
+.object-preview {
+    width: 100px;
+    height: 100px;
+    background: rgba(255, 255, 255, 0.05);
+    margin: 0 auto 25px;
+    border-radius: 15px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.object-preview img {
+    max-width: 70%;
+    max-height: 70%;
+    filter: drop-shadow(0 0 5px white);
+}
+
+.subtitle {
+    font-size: 0.9rem;
+    color: #a0aec0;
+    margin-bottom: 10px;
+}
+
+h2 {
+    font-size: 1.6rem;
+    margin-bottom: 30px;
+    font-weight: 600;
+}
+
+/* Champ de saisie stylisé */
+.input-container {
+    position: relative;
+    margin-bottom: 15px;
+}
+
+#hero-guess {
+    width: 100%;
+    padding: 15px;
+    background: rgba(5, 10, 20, 0.6);
+    border: 2px solid #3b5998;
+    border-radius: 10px;
+    color: white;
+    font-size: 1.1rem;
+    text-align: center;
+    outline: none;
+    transition: all 0.3s;
+}
+
+#hero-guess:focus {
+    border-color: #5a7ecf;
+    box-shadow: 0 0 15px rgba(59, 89, 152, 0.5);
+}
+
+.hint {
+    font-size: 0.8rem;
+    color: rgba(255, 255, 255, 0.3);
+    margin-top: 10px;
+}
+
+/* Feedback (Bonne/Mauvaise réponse) */
+.feedback {
+    margin-top: 20px;
+    font-weight: bold;
+    min-height: 24px;
+}
+
+.correct {
+    color: #48bb78;
+}
+
+.wrong {
+    color: #f56565;
+}

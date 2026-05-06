@@ -1,0 +1,156 @@
+/* Reset simple */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    background-color: #1a3365;
+    /* Bleu DC */
+    color: white;
+    height: 100vh;
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
+}
+
+.slide-container {
+    position: relative;
+    width: 100%;
+    max-width: 1400px;
+    /* Limite la largeur pour garder l'aspect frame */
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding-top: 30px;
+}
+
+/* Logo */
+.logo-container {
+    margin-bottom: 40px;
+}
+
+.logo {
+    width: 120px;
+    transition: transform 0.3s ease;
+    cursor: pointer;
+}
+
+/* Titre et Bouton */
+.content {
+    text-align: center;
+    z-index: 10;
+}
+
+.title {
+    font-size: 4.5rem;
+    font-weight: bold;
+    letter-spacing: 4px;
+    margin-bottom: 20px;
+    text-shadow: 2px 2px 10px rgba(0, 0, 0, 0.5);
+}
+
+.btn-play {
+    display: inline-block;
+    padding: 10px 35px;
+    background-color: #3b5998;
+    color: white;
+    text-decoration: none;
+    border-radius: 20px;
+    font-size: 1.3rem;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+    transition: all 0.3s ease;
+}
+
+.btn-play:hover {
+    background-color: #4a69ad;
+    transform: scale(1.05);
+}
+
+/* Conteneur des Héros */
+.hero-groups {
+    position: absolute;
+    bottom: -110px;
+    /* Descendu pour qu'ils soient bien en bas */
+    width: 100%;
+    height: 70%;
+    pointer-events: none;
+    /* Permet de cliquer sur le bouton même si une div est devant */
+}
+
+.group {
+    position: absolute;
+    bottom: 0;
+    pointer-events: auto;
+    /* Réactive les clics pour les images */
+}
+
+/* Positionnement et Rotation spécifiques */
+
+/* Harley Quinn à GAUCHE - inclinée vers la gauche */
+.left {
+    left: -50px;
+    bottom: 15%;
+    width: 20%;
+    transform: rotate(15deg);
+    /* Inclinaison vers l'extérieur */
+}
+
+/* Justice League au CENTRE - plus basse */
+.center {
+    left: 50%;
+    transform: translateX(-50%);
+    bottom: -30px;
+    /* Très bas pour ne pas prendre trop de place */
+    width: 55%;
+    text-align: center;
+}
+
+/* Héros Comics à DROITE - inclinés vers la droite */
+.right {
+    right: -99px;
+    bottom: 10%;
+    width: 22%;
+    transform: rotate(-25deg);
+    /* Inclinaison vers l'extérieur */
+}
+
+.hero-img {
+    width: 100%;
+    height: auto;
+    display: block;
+    transition: transform 0.4s ease, filter 0.3s ease;
+    cursor: pointer;
+}
+
+/* Effets de survol */
+.hero-img:hover {
+    filter: brightness(1.1);
+}
+
+/* Ajustement spécifique au survol pour garder l'inclinaison */
+.left .hero-img:hover {
+    transform: scale(1.05) rotate(-5deg);
+}
+
+.center .hero-img:hover {
+    transform: scale(1.02) translateY(-10px);
+}
+
+.right .hero-img:hover {
+    transform: scale(1.05) rotate(5deg);
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+    .title {
+        font-size: 3rem;
+    }
+
+    .center {
+        width: 70%;
+    }
+}
