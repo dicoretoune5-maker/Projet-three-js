@@ -1,9 +1,11 @@
+/* RESET DE BASE */
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
 }
 
+/* On s'assure que la 3D prend tout l'écran en fond */
 body {
     font-family: 'Segoe UI', sans-serif;
     background-color: #050a14;
@@ -12,42 +14,8 @@ body {
     overflow: hidden;
 }
 
-.galaxy-bg {
-    width: 100%;
-    height: 100%;
-    background: radial-gradient(circle at center, #1a3365 0%, #050a14 100%);
-    position: relative;
-}
-
-.instruction {
-    position: absolute;
-    top: 20px;
-    width: 100%;
-    text-align: center;
-    color: rgba(255, 255, 255, 0.5);
-}
-
-/* Objets factices dans le jeu */
-.game-object {
-    position: absolute;
-    top: 40%;
-    left: 20%;
-    cursor: pointer;
-    text-align: center;
-    transition: transform 0.3s;
-}
-
-.game-object:hover {
-    transform: scale(1.1);
-}
-
-.game-object img {
-    width: 60px;
-    filter: drop-shadow(0 0 10px #3b5998);
-}
-
-/* OVERLAY (Le fond sombre derrière le pop-up) */
-.overlay {
+/* OVERLAY (Le fond sombre qui centre ton pop-up) */
+#game-popup {
     position: fixed;
     top: 0;
     left: 0;
@@ -55,14 +23,16 @@ body {
     height: 100%;
     background: rgba(0, 0, 0, 0.85);
     display: none;
-    /* Caché par défaut */
+    /* Piloté par le JS */
     justify-content: center;
+    /* Centre horizontalement */
     align-items: center;
-    z-index: 1000;
+    /* Centre verticalement */
+    z-index: 10000;
     backdrop-filter: blur(5px);
 }
 
-/* CARTE D'ÉNIGME (Le Pop-up) */
+/* TA CARTE D'ÉNIGME ORIGINALE */
 .quiz-card {
     background: linear-gradient(145deg, #1a3365, #0a192f);
     width: 90%;
@@ -88,6 +58,7 @@ body {
     }
 }
 
+/* TA CROIX DE FERMETURE */
 .close-btn {
     position: absolute;
     top: 15px;
@@ -116,12 +87,6 @@ body {
     border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-.object-preview img {
-    max-width: 70%;
-    max-height: 70%;
-    filter: drop-shadow(0 0 5px white);
-}
-
 .subtitle {
     font-size: 0.9rem;
     color: #a0aec0;
@@ -134,13 +99,8 @@ h2 {
     font-weight: 600;
 }
 
-/* Champ de saisie stylisé */
-.input-container {
-    position: relative;
-    margin-bottom: 15px;
-}
-
-#hero-guess {
+/* TON CHAMP DE SAISIE STYLISÉ */
+#hero-input {
     width: 100%;
     padding: 15px;
     background: rgba(5, 10, 20, 0.6);
@@ -153,7 +113,7 @@ h2 {
     transition: all 0.3s;
 }
 
-#hero-guess:focus {
+#hero-input:focus {
     border-color: #5a7ecf;
     box-shadow: 0 0 15px rgba(59, 89, 152, 0.5);
 }
@@ -164,17 +124,9 @@ h2 {
     margin-top: 10px;
 }
 
-/* Feedback (Bonne/Mauvaise réponse) */
-.feedback {
+/* FEEDBACK (Le message de validation) */
+#feedback-msg {
     margin-top: 20px;
     font-weight: bold;
     min-height: 24px;
-}
-
-.correct {
-    color: #48bb78;
-}
-
-.wrong {
-    color: #f56565;
 }

@@ -3,28 +3,62 @@
 
 <head>
   <meta charset="UTF-8" />
-  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Find the Hero - DC</title>
+
+  <link rel="stylesheet" href="popup_reponse.css">
+
   <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
   <div id="app"></div>
 
-  <div id="game-popup" style="display: none;">
-    <div class="popup-content">
-      <span id="close-popup" style="cursor:pointer; float:right;">&times;</span>
-      <img id="obj-preview" src="" alt="" style="width: 100px; display: none; margin: 0 auto;">
+  <div id="game-popup" class="overlay"
+    style="display: none; position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 9999;">
+    <div class="quiz-card">
 
-      <h2 id="popup-title">À quel héros appartient cet objet ?</h2>
-      <input type="text" id="hero-input" placeholder="Entrez le nom du héros...">
-      <button id="btn-valider">Valider</button>
-      <p id="feedback-msg"></p>
+      <button id="close-popup" class="close-btn">&times;</button>
+
+      <div class="object-preview">
+        <img id="quiz-img" src="" alt="Objet" style="display: none;">
+      </div>
+
+      <div class="quiz-content">
+        <p class="subtitle">À quel héros appartient cet objet ?</p>
+        <h2 id="popup-title">Qui utilise cet objet ?</h2>
+
+        <div class="input-container">
+          <input type="text" id="hero-input" placeholder="Entrez le nom du héros..." autocomplete="off">
+          <div class="input-glow"></div>
+        </div>
+
+        <p class="hint">Appuie sur Entrée pour valider</p>
+
+        <button id="btn-valider" style="display: none;">Valider</button>
+
+        <div id="feedback-msg" class="feedback"></div>
+      </div>
+
     </div>
   </div>
 
   <script type="module" src="/src/main.js"></script>
+
+  <script>
+    // Ce script écoute le clavier. Si tu appuies sur "Entrée", il clique sur le bouton invisible pour toi.
+    document.addEventListener('DOMContentLoaded', () => {
+      const input = document.getElementById('hero-input');
+      const btn = document.getElementById('btn-valider');
+
+      input.addEventListener('keypress', function (e) {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          btn.click(); // Déclenche la vérification dans main.js
+        }
+      });
+    });
+  </script>
 </body>
 
 </html>

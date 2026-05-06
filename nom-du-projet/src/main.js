@@ -77,9 +77,9 @@ const character = [
   { file: "costume nightwing.glb", position: [18, -4, -12], scale: 2 },
   { file: "deathstrke mask.glb", position: [-18, -4, -12], scale: 2 },
   { file: "Lobo moto.glb", position: [8, -12, -15], scale: 1 },
-  { file: "masque de bane.glb", position: [-8, -12, -15], scale: 5 },
+  { file: "masque de bane.glb", position: [-15, 20, -5], scale: 5 },
   { file: "Masque de Fathe.glb", position: [24, 6, -18], scale: 5 },
-  { file: "massue hawkman (1).glb", position: [-24, 6, -18], scale: 5 },
+  { file: "massue hawkman (1).glb", position: [-30, 10, 0], scale: 5 },
 ];
 
 character.forEach(({ file, position, scale }) => {
@@ -156,8 +156,8 @@ const raycaster = new THREE.Raycaster();
 const pointer = new THREE.Vector2();
 
 window.addEventListener("click", (event) => {
-  // Ignorer les clics si le pop-up est déjà ouvert
-  if (document.getElementById("game-popup").style.display === "block") return;
+  // Changement ici : On vérifie si c'est déjà affiché en flex
+  if (document.getElementById("game-popup").style.display === "flex") return;
 
   pointer.x = (event.clientX / window.innerWidth) * 2 - 1;
   pointer.y = -(event.clientY / window.innerHeight) * 2 + 1;
@@ -168,7 +168,6 @@ window.addEventListener("click", (event) => {
   if (intersects.length > 0) {
     let clickedObj = intersects[0].object;
 
-    // Remonter pour trouver l'étiquette
     while (clickedObj.parent && !clickedObj.userData.name) {
       clickedObj = clickedObj.parent;
     }
@@ -177,7 +176,9 @@ window.addEventListener("click", (event) => {
       currentObjectFile = clickedObj.userData.name;
 
       const popup = document.getElementById("game-popup");
-      popup.style.display = "block";
+
+      // MODIFICATION VITAL POUR LE CENTRAGE : On utilise 'flex' au lieu de 'block'
+      popup.style.display = "flex";
 
       document.getElementById("feedback-msg").innerText = "";
       document.getElementById("hero-input").value = "";
@@ -202,14 +203,12 @@ document.getElementById("btn-valider").addEventListener("click", () => {
     document.getElementById("feedback-msg").style.color = "#4ade80";
     score++;
 
-    // Fait disparaître l'objet trouvé
     loadedObjects.forEach((obj) => {
       if (obj.userData.name === currentObjectFile) {
         obj.visible = false;
       }
     });
 
-    // Ferme le pop-up et vérifie la victoire
     setTimeout(() => {
       popup.style.display = "none";
       if (score === character.length) {
