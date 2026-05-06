@@ -11,7 +11,6 @@ scene.background = new THREE.Color(0x000000);
 let mouseX = 0;
 let mouseY = 0;
 window.addEventListener("mousemove", (event) => {
-  // On calcule la position de la souris par rapport au centre de l'écran
   mouseX = (event.clientX / window.innerWidth) * 2 - 1;
   mouseY = -(event.clientY / window.innerHeight) * 2 + 1;
 });
@@ -66,15 +65,13 @@ dracoLoader.setDecoderPath(
 );
 loader.setDRACOLoader(dracoLoader);
 
-// Tableau pour mémoriser les objets et pouvoir les animer plus tard
 const loadedObjects = [];
 
-// NOUVEAU PLACEMENT : [X (gauche/droite), Y (haut/bas), Z (profondeur)]
 const character = [
-  { file: "superman.glb", position: [0, 8, -10], scale: 3 }, // Centre haut
-  { file: "wonde woman lasso.glb", position: [0, -6, -5], scale: 5 }, // Centre bas
-  { file: "Aquaman tridant.glb", position: [12, 2, -10], scale: 2 }, // Droite
-  { file: "arc de arrow.glb", position: [-12, 2, -10], scale: 5 }, // Gauche
+  { file: "superman.glb", position: [0, 8, -10], scale: 3 },
+  { file: "wonde woman lasso.glb", position: [0, -6, -5], scale: 5 },
+  { file: "Aquaman tridant.glb", position: [12, 2, -10], scale: 2 },
+  { file: "arc de arrow.glb", position: [-12, 2, -10], scale: 5 },
   { file: "bague de flash.glb", position: [7, 12, -15], scale: 5 },
   { file: "cape de raven.glb", position: [-7, 12, -15], scale: 5 },
   { file: "costume nightwing.glb", position: [18, -4, -12], scale: 2 },
@@ -92,8 +89,12 @@ character.forEach(({ file, position, scale }) => {
       const obj = gltf.scene;
       obj.position.set(...position);
       obj.scale.setScalar(scale);
+
+      // L'étiquette magique pour reconnaître l'objet au clic !
+      obj.userData.name = file;
+
       scene.add(obj);
-      loadedObjects.push(obj); // On sauvegarde l'objet pour l'animation
+      loadedObjects.push(obj);
     },
     undefined,
     (error) => console.error(`Erreur avec le fichier ${file}:`, error),
@@ -106,15 +107,12 @@ const controls = new OrbitControls(camera, renderer.domElement);
 function animate() {
   requestAnimationFrame(animate);
 
-  // 1. Fait tourner les étoiles
   starParticles.rotation.y -= 0.0005;
   starParticles.rotation.x -= 0.0002;
 
-  // 2. EFFET PARALLAXE : La scène bouge doucement en suivant la souris
   scene.rotation.y += (mouseX * 0.1 - scene.rotation.y) * 0.05;
   scene.rotation.x += (-mouseY * 0.1 - scene.rotation.x) * 0.05;
 
-  // 3. EFFET APESANTEUR : Fait flotter les objets DC
   const time = Date.now() * 0.001;
   loadedObjects.forEach((obj, index) => {
     obj.position.y += Math.sin(time + index) * 0.005;
@@ -124,12 +122,106 @@ function animate() {
   renderer.render(scene, camera);
 }
 
-// --- GÉRER LE REDIMENSIONNEMENT DE LA FENÊTRE ---
 window.addEventListener("resize", () => {
   camera.aspect = window.innerWidth / window.innerHeight;
   camera.updateProjectionMatrix();
   renderer.setSize(window.innerWidth, window.innerHeight);
 });
 
-// Lancement
 animate();
+
+// ==========================================
+// MÉCANIQUE DE JEU ET RAYCASTER
+// ==========================================
+
+const corectAnswers = {
+  "superman.glb": ["superman", "clark kent"],
+  "Aquaman tridant.glb": ["aquaman", "arthur curry"],
+  "arc de arrow.glb": ["green arrow", "oliver queen"],
+  "bague de flash.glb": ["flash", "barry allen"],
+  "cape de raven.glb": ["raven", "rachel roth"],
+  "costume nightwing.glb": ["nightwing", "dick grayson"],
+  "deathstrke mask.glb": ["deathstroke", "slade wilson"],
+  "Lobo moto.glb": ["lobo"],
+  "masque de bane.glb": ["bane"],
+  "Masque de Fathe.glb": ["doctor fate", "dr fate", "kent nelson"],
+  "massue hawkman (1).glb": ["hawkman", "carter hall"],
+  "wonde woman lasso.glb": ["wonder woman", "diana prince"],
+};
+
+let currentObjectFile = "";
+let score = 0;
+
+const raycaster = new THREE.Raycaster();
+const pointer = new THREE.Vector2();
+
+window.addEventListener("click", (event) => {
+  // Ignorer les clics si le pop-up est déjà ouvert
+  if (document.getElementById("game-popup").style.display === "block") return;
+
+  pointer.x = (event.clientX / window.innerWidth) * 2 - 1;
+  pointer.y = -(event.clientY / window.innerHeight) * 2 + 1;
+
+  raycaster.setFromCamera(pointer, camera);
+  const intersects = raycaster.intersectObjects(loadedObjects, true);
+
+  if (intersects.length > 0) {
+    let clickedObj = intersects[0].object;
+
+    // Remonter pour trouver l'étiquette
+    while (clickedObj.parent && !clickedObj.userData.name) {
+      clickedObj = clickedObj.parent;
+    }
+
+    if (clickedObj.userData.name) {
+      currentObjectFile = clickedObj.userData.name;
+
+      const popup = document.getElementById("game-popup");
+      popup.style.display = "block";
+
+      document.getElementById("feedback-msg").innerText = "";
+      document.getElementById("hero-input").value = "";
+      document.getElementById("hero-input").focus();
+    }
+  }
+});
+
+document.getElementById("btn-valider").addEventListener("click", () => {
+  const userInput = document
+    .getElementById("hero-input")
+    .value.toLowerCase()
+    .trim();
+  const popup = document.getElementById("game-popup");
+
+  if (
+    corectAnswers[currentObjectFile] &&
+    corectAnswers[currentObjectFile].includes(userInput)
+  ) {
+    document.getElementById("feedback-msg").innerText =
+      "Bravo ! C'est le bon héros.";
+    document.getElementById("feedback-msg").style.color = "#4ade80";
+    score++;
+
+    // Fait disparaître l'objet trouvé
+    loadedObjects.forEach((obj) => {
+      if (obj.userData.name === currentObjectFile) {
+        obj.visible = false;
+      }
+    });
+
+    // Ferme le pop-up et vérifie la victoire
+    setTimeout(() => {
+      popup.style.display = "none";
+      if (score === character.length) {
+        window.location.href = "page_de_fin.html";
+      }
+    }, 1500);
+  } else {
+    document.getElementById("feedback-msg").innerText = "Dommage, réessaie !";
+    document.getElementById("feedback-msg").style.color = "#f87171";
+  }
+});
+
+document.getElementById("close-popup").addEventListener("click", () => {
+  document.getElementById("game-popup").style.display = "none";
+});
