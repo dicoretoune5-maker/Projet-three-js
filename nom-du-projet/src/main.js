@@ -3,18 +3,15 @@ import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { DRACOLoader } from "three/examples/jsm/loaders/DRACOLoader.js";
 
-// ==========================================
-// MOTEUR PRINCIPAL (La Galaxie)
-// ==========================================
-
+// --- SCÈNE PRINCIPALE ---
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x000000);
 
-let mouseX = 0;
-let mouseY = 0;
-window.addEventListener("mousemove", (event) => {
-  mouseX = (event.clientX / window.innerWidth) * 2 - 1;
-  mouseY = -(event.clientY / window.innerHeight) * 2 + 1;
+let mouseX = 0,
+  mouseY = 0;
+window.addEventListener("mousemove", (e) => {
+  mouseX = (e.clientX / window.innerWidth) * 2 - 1;
+  mouseY = -(e.clientY / window.innerHeight) * 2 + 1;
 });
 
 const camera = new THREE.PerspectiveCamera(
@@ -23,38 +20,36 @@ const camera = new THREE.PerspectiveCamera(
   0.1,
   1000,
 );
-camera.position.z = 30;
+camera.position.z = 35; // On recule un peu pour mieux voir
 
 const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 document.body.appendChild(renderer.domElement);
 
-scene.add(new THREE.AmbientLight(0xffffff, 1.5));
-const light = new THREE.PointLight(0xffffff, 100);
-light.position.set(10, 10, 10);
-scene.add(light);
+scene.add(new THREE.AmbientLight(0xffffff, 2));
 
+// --- LA GALAXIE (RETOUR EN FORCE) ---
 const starGeometry = new THREE.BufferGeometry();
-const starCount = 5000;
-const positionArray = new Float32Array(starCount * 3);
+const starCount = 6000;
+const posArray = new Float32Array(starCount * 3);
 for (let i = 0; i < starCount * 3; i++) {
-  positionArray[i] = (Math.random() - 0.5) * 300;
+  posArray[i] = (Math.random() - 0.5) * 400; // Plus large
 }
-starGeometry.setAttribute(
-  "position",
-  new THREE.BufferAttribute(positionArray, 3),
-);
+starGeometry.setAttribute("position", new THREE.BufferAttribute(posArray, 3));
+
+// On booste la taille (size: 1.0) et on s'assure qu'elles brillent
 const starMaterial = new THREE.PointsMaterial({
-  size: 0.3,
+  size: 1.0,
   color: 0xffffff,
   transparent: true,
-  opacity: 0.8,
+  opacity: 0.9,
   sizeAttenuation: true,
 });
 const starParticles = new THREE.Points(starGeometry, starMaterial);
 scene.add(starParticles);
 
-// --- Préparation commune pour le chargement 3D ---
+// --- CHARGEMENT ---
 const loader = new GLTFLoader();
 const dracoLoader = new DRACOLoader();
 dracoLoader.setDecoderPath(
@@ -79,214 +74,150 @@ const character = [
 ];
 
 character.forEach(({ file, position, scale }) => {
-  loader.load(
-    `./${file}`,
-    (gltf) => {
-      const obj = gltf.scene;
-      obj.position.set(...position);
-      obj.scale.setScalar(scale);
-      obj.userData.name = file;
-      scene.add(obj);
-      loadedObjects.push(obj);
-    },
-    undefined,
-    (error) => console.error(`Erreur avec le fichier ${file}:`, error),
-  );
+  loader.load(`./${file}`, (gltf) => {
+    const obj = gltf.scene;
+    obj.position.set(...position);
+    obj.scale.setScalar(scale);
+    obj.userData.name = file;
+    scene.add(obj);
+    loadedObjects.push(obj);
+  });
 });
 
 const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
 
 function animate() {
   requestAnimationFrame(animate);
-  starParticles.rotation.y -= 0.0005;
-  starParticles.rotation.x -= 0.0002;
-  scene.rotation.y += (mouseX * 0.1 - scene.rotation.y) * 0.05;
-  scene.rotation.x += (-mouseY * 0.1 - scene.rotation.x) * 0.05;
+
+  // Animation galaxie
+  starParticles.rotation.y -= 0.0003;
+
+  // Inclinaison de la scène avec la souris
+  scene.rotation.y += (mouseX * 0.05 - scene.rotation.y) * 0.05;
+  scene.rotation.x += (-mouseY * 0.05 - scene.rotation.x) * 0.05;
+
   const time = Date.now() * 0.001;
-  loadedObjects.forEach((obj, index) => {
-    obj.position.y += Math.sin(time + index) * 0.005;
+  loadedObjects.forEach((obj, i) => {
+    obj.position.y += Math.sin(time + i) * 0.005;
+    obj.rotation.y += 0.002; // Les objets tournent un peu sur eux-mêmes
   });
+
   controls.update();
   renderer.render(scene, camera);
 }
-window.addEventListener("resize", () => {
-  camera.aspect = window.innerWidth / window.innerHeight;
-  camera.updateProjectionMatrix();
-  renderer.setSize(window.innerWidth, window.innerHeight);
-});
 animate();
 
 // ==========================================
-// MÉCANIQUE DE JEU ET RAYCASTER
+// LE MINI-VIEWER (POUR LE POP-UP)
 // ==========================================
+let miniRenderer, miniScene, miniCamera, miniControls, miniAnimId;
 
-const corectAnswers = {
-  "superman.glb": ["superman", "clark kent"],
-  "Aquaman tridant.glb": ["aquaman", "arthur curry"],
-  "arc de arrow.glb": ["green arrow", "oliver queen"],
-  "bague de flash.glb": ["flash", "barry allen"],
-  "cape de raven.glb": ["raven", "rachel roth"],
-  "costume nightwing.glb": ["nightwing", "dick grayson"],
-  "deathstrke mask.glb": ["deathstroke", "slade wilson"],
-  "Lobo moto.glb": ["lobo"],
-  "masque de bane.glb": ["bane"],
-  "Masque de Fathe.glb": ["doctor fate", "dr fate", "kent nelson"],
-  "massue hawkman (1).glb": ["hawkman", "carter hall"],
-  "wonde woman lasso.glb": ["wonder woman", "diana prince"],
-};
-
-let currentObjectFile = "";
-let score = 0;
-const raycaster = new THREE.Raycaster();
-const pointer = new THREE.Vector2();
-
-// VARIABLES POUR LE MINI-MOTEUR (Le visualiseur du pop-up)
-let miniRenderer,
-  miniScene,
-  miniCamera,
-  miniControls,
-  miniAnimationId,
-  miniLoadedModel;
-
-// FONCTION POUR NETTOYER LE MINI-MOTEUR (Crucial pour la mémoire !)
-function cleanupMiniViewer() {
-  if (miniAnimationId) {
-    cancelAnimationFrame(miniAnimationId); // Arrête la boucle d'animation
-    miniAnimationId = null;
-  }
-  if (miniControls) {
-    miniControls.dispose();
-    miniControls = null;
-  }
-  if (miniRenderer) {
-    miniRenderer.dispose(); // Détruit le renderer
-    miniRenderer.forceContextLoss(); // Libère la carte graphique
-    miniRenderer.domElement.remove(); // Enlève le canvas HTML
-    miniRenderer = null;
-  }
-  if (miniScene) {
-    // Traverse et détruit toutes les géométries et matériaux du modèle
-    miniScene.traverse((object) => {
-      if (object.geometry) object.geometry.dispose();
-      if (object.material) {
-        if (Array.isArray(object.material))
-          object.material.forEach((material) => material.dispose());
-        else object.material.dispose();
-      }
-    });
-    miniScene = null;
-  }
-  miniCamera = null;
-  miniLoadedModel = null;
-}
-
-// FONCTION POUR INITIALISER LE MINI-MOTEUR DANS LE CADRE
-function setupMiniViewer(container) {
-  const rect = container.getBoundingClientRect();
-
-  // 1. Scene et Camera (Perspective Camera pour que l'objet soit bien visible)
+function setupMiniViewer(container, file) {
+  cleanupMiniViewer();
   miniScene = new THREE.Scene();
-  miniScene.background = new THREE.Color(0x1a3365); // Même fond bleu que ton pop-up
 
+  // Fond bleu nuit pour le mini-viewer
+  miniScene.background = new THREE.Color(0x0a192f);
+
+  const rect = container.getBoundingClientRect();
   miniCamera = new THREE.PerspectiveCamera(
     45,
     rect.width / rect.height,
     0.1,
     100,
   );
-  miniCamera.position.set(0, 0, 5); // Position de base
+  miniCamera.position.z = 5;
 
-  // 2. Renderer spécifique pour le petit cadre
-  miniRenderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+  miniRenderer = new THREE.WebGLRenderer({ antialias: true });
   miniRenderer.setSize(rect.width, rect.height);
-  miniRenderer.setPixelRatio(window.devicePixelRatio);
   container.appendChild(miniRenderer.domElement);
 
-  // 3. Lumières pour bien voir l'objet
-  const ambientLight = new THREE.AmbientLight(0xffffff, 2);
-  miniScene.add(ambientLight);
-  const pointLight = new THREE.PointLight(0xffffff, 50);
-  pointLight.position.set(10, 10, 10);
-  miniScene.add(pointLight);
+  miniScene.add(new THREE.AmbientLight(0xffffff, 2.5));
+  const pLight = new THREE.PointLight(0xffffff, 50);
+  pLight.position.set(5, 5, 5);
+  miniScene.add(pLight);
 
-  // 4. Contrôles (OrbitControls pour pouvoir faire tourner l'objet)
   miniControls = new OrbitControls(miniCamera, miniRenderer.domElement);
-  miniControls.enablePan = false; // Désactive le déplacement
-  miniControls.enableZoom = true; // Active le zoom
+  miniControls.enableZoom = true;
+
+  loader.load(`./${file}`, (gltf) => {
+    const model = gltf.scene;
+    miniScene.add(model);
+
+    const box = new THREE.Box3().setFromObject(model);
+    const center = box.getCenter(new THREE.Vector3());
+    model.position.sub(center);
+
+    const size = box.getSize(new THREE.Vector3());
+    const maxDim = Math.max(size.x, size.y, size.z);
+    miniCamera.position.z = maxDim * 2.8;
+  });
+
+  function miniAnimate() {
+    miniAnimId = requestAnimationFrame(miniAnimate);
+    if (miniControls) miniControls.update();
+    if (miniRenderer) miniRenderer.render(miniScene, miniCamera);
+  }
+  miniAnimate();
 }
 
-// FONCTION POUR CHARGER LE MODÈLE DANS LE MINI-VIEWER ET LE CENTRER
-function loadModelInPopup(filename) {
-  // Nettoie l'ancien modèle s'il y en a un
-  if (miniLoadedModel) miniScene.remove(miniLoadedModel);
-
-  loader.load(
-    `./${filename}`,
-    (gltf) => {
-      miniLoadedModel = gltf.scene;
-      miniScene.add(miniLoadedModel);
-
-      // ASTUCE DE GÉNIE : Centrer et adapter automatiquement la taille du modèle
-      const box = new THREE.Box3().setFromObject(miniLoadedModel);
-      const center = box.getCenter(new THREE.Vector3());
-      const size = box.getSize(new THREE.Vector3());
-
-      miniLoadedModel.position.x += miniLoadedModel.position.x - center.x;
-      miniLoadedModel.position.y += miniLoadedModel.position.y - center.y;
-      miniLoadedModel.position.z += miniLoadedModel.position.z - center.z;
-
-      const maxDim = Math.max(size.x, size.y, size.z);
-      const fov = miniCamera.fov * (Math.PI / 180);
-      let cameraZ = Math.abs(maxDim / 2 / Math.tan(fov / 2));
-
-      miniCamera.position.z = cameraZ * 2.5; // Ajustement de la distance
-      miniCamera.updateProjectionMatrix();
-      miniControls.target.set(0, 0, 0);
-      miniControls.update();
-    },
-    undefined,
-    (error) => console.error(`Erreur mini-load:`, error),
-  );
+function cleanupMiniViewer() {
+  if (miniAnimId) cancelAnimationFrame(miniAnimId);
+  if (miniRenderer) {
+    miniRenderer.dispose();
+    miniRenderer.domElement.remove();
+    miniRenderer = null;
+  }
+  miniScene = null;
 }
 
-// BOUCLE D'ANIMATION DU MINI-MOTEUR
-function animateMini() {
-  miniAnimationId = requestAnimationFrame(animateMini);
-  if (miniControls) miniControls.update();
-  if (miniRenderer && miniScene && miniCamera)
-    miniRenderer.render(miniScene, miniCamera);
-}
+// ==========================================
+// LOGIQUE DE JEU
+// ==========================================
+const corectAnswers = {
+  "superman.glb": ["superman"],
+  "Aquaman tridant.glb": ["aquaman"],
+  "arc de arrow.glb": ["green arrow"],
+  "bague de flash.glb": ["flash"],
+  "cape de raven.glb": ["raven"],
+  "costume nightwing.glb": ["nightwing"],
+  "deathstrke mask.glb": ["deathstroke"],
+  "Lobo moto.glb": ["lobo"],
+  "masque de bane.glb": ["bane"],
+  "Masque de Fathe.glb": ["doctor fate"],
+  "massue hawkman (1).glb": ["hawkman"],
+  "wonde woman lasso.glb": ["wonder woman"],
+};
 
-// --- GESTION DU CLIC SUR LA GALAXIE ---
+let currentObjectFile = "",
+  score = 0;
+const raycaster = new THREE.Raycaster();
+const pointer = new THREE.Vector2();
+
 window.addEventListener("click", (event) => {
-  const popup = document.getElementById("game-popup");
-
-  // Changement : on vérifie 'flex' pour ton centrage CSS
-  if (popup.style.display === "flex") return;
-
+  if (document.getElementById("game-popup").style.display === "flex") return;
   pointer.x = (event.clientX / window.innerWidth) * 2 - 1;
   pointer.y = -(event.clientY / window.innerHeight) * 2 + 1;
-
   raycaster.setFromCamera(pointer, camera);
   const intersects = raycaster.intersectObjects(loadedObjects, true);
 
   if (intersects.length > 0) {
     let clickedObj = intersects[0].object;
-    while (clickedObj.parent && !clickedObj.userData.name) {
+    while (clickedObj.parent && !clickedObj.userData.name)
       clickedObj = clickedObj.parent;
-    }
 
     if (clickedObj.userData.name) {
       currentObjectFile = clickedObj.userData.name;
-
-      // Affiche le pop-up
+      const popup = document.getElementById("game-popup");
       popup.style.display = "flex";
 
-      // CHARGEMENT DU MINI-VIEWER LORS DU CLIC
-      const miniContainer = document.getElementById("mini-viewer");
-      setupMiniViewer(miniContainer); // Crée le 2ème moteur
-      loadModelInPopup(currentObjectFile); // Charge le modèle dedans
-      animateMini(); // Lance la boucle d'animation du pop-up
+      setTimeout(() => {
+        setupMiniViewer(
+          document.getElementById("mini-viewer"),
+          currentObjectFile,
+        );
+      }, 100);
 
       document.getElementById("feedback-msg").innerText = "";
       document.getElementById("hero-input").value = "";
@@ -295,48 +226,32 @@ window.addEventListener("click", (event) => {
   }
 });
 
-// --- VALIDATION DE LA RÉPONSE ---
 document.getElementById("btn-valider").addEventListener("click", () => {
-  const userInput = document
-    .getElementById("hero-input")
-    .value.toLowerCase()
-    .trim();
-  const popup = document.getElementById("game-popup");
-
-  if (
-    corectAnswers[currentObjectFile] &&
-    corectAnswers[currentObjectFile].includes(userInput)
-  ) {
-    document.getElementById("feedback-msg").innerText =
-      "Bravo ! C'est le bon héros.";
+  const val = document.getElementById("hero-input").value.toLowerCase().trim();
+  if (corectAnswers[currentObjectFile]?.includes(val)) {
+    document.getElementById("feedback-msg").innerText = "Bravo !";
     document.getElementById("feedback-msg").style.color = "#4ade80";
     score++;
-
-    // Cache l'objet trouvé dans la galaxie principale
-    loadedObjects.forEach((obj) => {
-      if (obj.userData.name === currentObjectFile) obj.visible = false;
+    loadedObjects.forEach((o) => {
+      if (o.userData.name === currentObjectFile) o.visible = false;
     });
-
     setTimeout(() => {
-      popup.style.display = "none";
-
-      // 👉 NETTOYAGE DU MINI-VIEWER QUAND LE POP-UP FERME
+      document.getElementById("game-popup").style.display = "none";
       cleanupMiniViewer();
-
-      if (score === character.length) {
-        window.location.href = "page_de_fin.html";
-      }
-    }, 1500);
+    }, 1200);
   } else {
-    document.getElementById("feedback-msg").innerText = "Dommage, réessaie !";
+    document.getElementById("feedback-msg").innerText = "Faux !";
     document.getElementById("feedback-msg").style.color = "#f87171";
   }
 });
 
-// --- FERMER LE POP-UP AVEC LA CROIX ---
 document.getElementById("close-popup").addEventListener("click", () => {
   document.getElementById("game-popup").style.display = "none";
-
-  // NETTOYAGE DU MINI-VIEWER QUAND LE POP-UP FERME
   cleanupMiniViewer();
+});
+
+window.addEventListener("resize", () => {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
 });
