@@ -26,21 +26,18 @@ camera.position.z = 40;
 
 const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setSize(window.innerWidth, window.innerHeight);
-// On garde ça pour que le rendu soit net sur ton écran Retina
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 document.body.appendChild(renderer.domElement);
 
 scene.add(new THREE.AmbientLight(0xffffff, 2));
 
 // ==========================================
-// 2. LA GALAXIE (VERSION AFFINÉE ET PLUS RÉALISTE)
+// 2. LA GALAXIE (VERSION AFFINÉE)
 // ==========================================
 const starGeometry = new THREE.BufferGeometry();
-// On augmente un peu le nombre pour compenser la taille (10,000 au lieu de 6,000)
 const starCount = 10000;
 const positionArray = new Float32Array(starCount * 3);
 
-// On disperse les étoiles sur une zone plus large pour la profondeur
 for (let i = 0; i < starCount * 3; i++) {
   positionArray[i] = (Math.random() - 0.5) * 500;
 }
@@ -49,21 +46,19 @@ starGeometry.setAttribute(
   new THREE.BufferAttribute(positionArray, 3),
 );
 
-// J'AI CHANGÉ LA TAILLE ICI 👉 size: 0.3 (au lieu de 1.0)
-// On la rend aussi un peu moins opaque pour plus de douceur
 const starMaterial = new THREE.PointsMaterial({
-  size: 0.3, // Plus petites pour la profondeur
+  size: 0.3,
   color: 0xffffff,
   transparent: true,
-  opacity: 0.6, // Un peu plus discret
-  sizeAttenuation: true, // Important pour que les étoiles lointaines paraissent plus petites
+  opacity: 0.6,
+  sizeAttenuation: true,
 });
 
 const starParticles = new THREE.Points(starGeometry, starMaterial);
 scene.add(starParticles);
 
 // ==========================================
-// 3. CHARGEMENT DES OBJETS 3D (Les Héros)
+// 3. CHARGEMENT DES OBJETS 3D
 // ==========================================
 const loader = new GLTFLoader();
 const dracoLoader = new DRACOLoader();
@@ -100,24 +95,17 @@ character.forEach(({ file, position, scale }) => {
 });
 
 const controls = new OrbitControls(camera, renderer.domElement);
-controls.enableDamping = true; // Pour plus de fluidité
+controls.enableDamping = true;
 
-// Boucle d'animation principale
 function animate() {
   requestAnimationFrame(animate);
-
-  // Animation de fond
   starParticles.rotation.y -= 0.0003;
-
-  // Inclinaison de la scène avec la souris
   scene.rotation.y += (mouseX * 0.05 - scene.rotation.y) * 0.05;
   scene.rotation.x += (-mouseY * 0.05 - scene.rotation.x) * 0.05;
-
   const time = Date.now() * 0.001;
   loadedObjects.forEach((obj, i) => {
     obj.position.y += Math.sin(time + i) * 0.005;
   });
-
   controls.update();
   renderer.render(scene, camera);
 }
@@ -131,12 +119,8 @@ let miniRenderer, miniScene, miniCamera, miniControls, miniAnimId;
 function setupMiniViewer(container, file) {
   cleanupMiniViewer();
   miniScene = new THREE.Scene();
-
-  // Fond bleu nuit pour le mini-viewer
   miniScene.background = new THREE.Color(0x0a192f);
-
   const rect = container.getBoundingClientRect();
-  // On s'assure que la largeur et la hauteur ne sont pas nulles
   const width = rect.width || 120;
   const height = rect.height || 120;
 
@@ -158,13 +142,9 @@ function setupMiniViewer(container, file) {
   loader.load(`./${file}`, (gltf) => {
     const model = gltf.scene;
     miniScene.add(model);
-
-    // Auto-centrage de l'objet
     const box = new THREE.Box3().setFromObject(model);
     const center = box.getCenter(new THREE.Vector3());
     model.position.sub(center);
-
-    // On adapte la caméra pour que l'objet remplisse bien le carré
     const size = box.getSize(new THREE.Vector3());
     const maxDim = Math.max(size.x, size.y, size.z);
     miniCamera.position.z = maxDim * 2.8;
@@ -189,21 +169,26 @@ function cleanupMiniViewer() {
 }
 
 // ==========================================
-// 5. MÉCANIQUE DE JEU (CLIC & VALIDATION)
+// 5. MÉCANIQUE DE JEU
 // ==========================================
 const corectAnswers = {
-  "superman.glb": ["superman"],
-  "Aquaman tridant.glb": ["aquaman"],
-  "arc de arrow.glb": ["green arrow"],
-  "bague de flash.glb": ["flash"],
-  "cape de raven.glb": ["raven"],
-  "costume nightwing.glb": ["nightwing"],
-  "deathstrke mask.glb": ["deathstroke"],
+  "superman.glb": ["superman", "clark kent", "clark"],
+  "wonde woman lasso.glb": [
+    "wonder woman",
+    "wonderwoman",
+    "diana prince",
+    "wonde woman",
+  ],
+  "Aquaman tridant.glb": ["aquaman", "arthur curry", "aquaman tridant"],
+  "arc de arrow.glb": ["green arrow", "arrow", "oliver queen"],
+  "bague de flash.glb": ["flash", "the flash", "barry allen"],
+  "cape de raven.glb": ["raven", "rachel roth"],
+  "costume nightwing.glb": ["nightwing", "dick grayson"],
+  "deathstrke mask.glb": ["deathstroke", "slade wilson", "deathstrke"],
   "Lobo moto.glb": ["lobo"],
   "masque de bane.glb": ["bane"],
-  "Masque de Fathe.glb": ["doctor fate"],
-  "massue hawkman (1).glb": ["hawkman"],
-  "wonder woman lasso.glb": ["wonder woman"],
+  "Masque de Fathe.glb": ["doctor fate", "dr fate", "fate", "kent nelson"],
+  "massue hawkman (1).glb": ["hawkman", "carter hall"],
 };
 
 let currentObjectFile = "",
@@ -213,10 +198,8 @@ const pointer = new THREE.Vector2();
 
 window.addEventListener("click", (event) => {
   if (document.getElementById("game-popup").style.display === "flex") return;
-
   pointer.x = (event.clientX / window.innerWidth) * 2 - 1;
   pointer.y = -(event.clientY / window.innerHeight) * 2 + 1;
-
   raycaster.setFromCamera(pointer, camera);
   const intersects = raycaster.intersectObjects(loadedObjects, true);
 
@@ -227,17 +210,14 @@ window.addEventListener("click", (event) => {
 
     if (clickedObj.userData.name) {
       currentObjectFile = clickedObj.userData.name;
-      const popup = document.getElementById("game-popup");
-      popup.style.display = "flex";
-
-      // Micro-délai pour laisser le temps au pop-up de s'ouvrir
+      console.log("Cliqué sur :", currentObjectFile); // Debug utile
+      document.getElementById("game-popup").style.display = "flex";
       setTimeout(() => {
         setupMiniViewer(
           document.getElementById("mini-viewer"),
           currentObjectFile,
         );
       }, 100);
-
       document.getElementById("feedback-msg").innerText = "";
       document.getElementById("hero-input").value = "";
       document.getElementById("hero-input").focus();
@@ -245,41 +225,39 @@ window.addEventListener("click", (event) => {
   }
 });
 
-// Bouton Valider
 document.getElementById("btn-valider").addEventListener("click", () => {
   const userInput = document
     .getElementById("hero-input")
     .value.toLowerCase()
     .trim();
-  const popup = document.getElementById("game-popup");
+  const feedback = document.getElementById("feedback-msg");
 
-  if (corectAnswers[currentObjectFile]?.includes(userInput)) {
-    document.getElementById("feedback-msg").innerText =
-      "Bravo ! C'est le bon héros.";
-    document.getElementById("feedback-msg").style.color = "#4ade80";
+  if (
+    corectAnswers[currentObjectFile] &&
+    corectAnswers[currentObjectFile].includes(userInput)
+  ) {
+    feedback.innerText = "Bravo ! C'est le bon héros.";
+    feedback.style.color = "#4ade80";
     score++;
     loadedObjects.forEach((obj) => {
       if (obj.userData.name === currentObjectFile) obj.visible = false;
     });
-
     setTimeout(() => {
-      popup.style.display = "none";
+      document.getElementById("game-popup").style.display = "none";
       cleanupMiniViewer();
       if (score === character.length) window.location.href = "page_de_fin.html";
     }, 1500);
   } else {
-    document.getElementById("feedback-msg").innerText = "Dommage, réessaie !";
-    document.getElementById("feedback-msg").style.color = "#f87171";
+    feedback.innerText = "Dommage, réessaie !";
+    feedback.style.color = "#f87171";
   }
 });
 
-// Croix de fermeture
 document.getElementById("close-popup").addEventListener("click", () => {
   document.getElementById("game-popup").style.display = "none";
   cleanupMiniViewer();
 });
 
-// Redimensionnement
 window.addEventListener("resize", () => {
   camera.aspect = window.innerWidth / window.innerHeight;
   camera.updateProjectionMatrix();
