@@ -10,3 +10,9 @@ camera.position.z = 30;
 const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
+
+// --- AJOUT DE LUMIÈRE ---
+scene.add(new THREE.AmbientLight(0xffffff, 1.5)); // Lumière ambiante pour adoucir les ombre
+const light = new THREE.PointLight(0xffffff, 100);
+light.position.set(10, 10, 10);
+scene.add(light);
