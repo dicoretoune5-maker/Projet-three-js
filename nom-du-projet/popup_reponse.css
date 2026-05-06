@@ -1,4 +1,3 @@
-/* RESET DE BASE */
 * {
     margin: 0;
     padding: 0;
@@ -8,50 +7,36 @@
 body {
     font-family: 'Segoe UI', sans-serif;
     background-color: #050a14;
-    color: white;
-    height: 100vh;
+    /* Fond bleu nuit profond */
     overflow: hidden;
 }
 
-/* OVERLAY MODIFIÉ : On force display flex pour le centrage */
 #game-popup {
     position: fixed;
     top: 0;
     left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.85);
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.7);
+    /* Voile sombre par-dessus la 3D */
+    backdrop-filter: blur(5px);
+    z-index: 10000;
     display: none;
-    /* Piloté par le JS en mode 'flex' */
+    /* Le JS le passera en 'flex' */
     justify-content: center;
     align-items: center;
-    z-index: 10000;
-    backdrop-filter: blur(5px);
 }
 
 .quiz-card {
     background: linear-gradient(145deg, #1a3365, #0a192f);
     width: 90%;
     max-width: 450px;
-    padding: 40px;
+    padding: 30px;
     border-radius: 20px;
     position: relative;
     border: 1px solid rgba(59, 89, 152, 0.5);
-    box-shadow: 0 0 40px rgba(59, 89, 152, 0.3);
+    box-shadow: 0 0 50px rgba(0, 85, 255, 0.3);
     text-align: center;
-    animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-}
-
-@keyframes popIn {
-    from {
-        transform: scale(0.8);
-        opacity: 0;
-    }
-
-    to {
-        transform: scale(1);
-        opacity: 1;
-    }
 }
 
 .close-btn {
@@ -63,69 +48,32 @@ body {
     color: white;
     font-size: 2rem;
     cursor: pointer;
-    opacity: 0.5;
 }
 
 .object-preview {
-    width: 120px;
-    /* Un peu plus grand pour la 3D */
-    height: 120px;
-    background: rgba(255, 255, 255, 0.05);
-    margin: 0 auto 25px;
+    width: 130px;
+    height: 130px;
+    background: rgba(255, 255, 255, 0.1);
+    margin: 0 auto 20px;
     border-radius: 15px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
     overflow: hidden;
-    /* Important pour le canvas */
-}
-
-/* MODIFICATION ICI : On force le canvas 3D à remplir le carré */
-#mini-viewer canvas {
-    width: 100% !important;
-    height: 100% !important;
-    outline: none;
-}
-
-.subtitle {
-    font-size: 0.9rem;
-    color: #a0aec0;
-    margin-bottom: 10px;
-}
-
-h2 {
-    font-size: 1.6rem;
-    margin-bottom: 30px;
-    font-weight: 600;
 }
 
 #hero-input {
     width: 100%;
     padding: 15px;
-    background: rgba(5, 10, 20, 0.6);
+    background: rgba(0, 0, 0, 0.4);
     border: 2px solid #3b5998;
     border-radius: 10px;
     color: white;
     font-size: 1.1rem;
     text-align: center;
     outline: none;
-    transition: all 0.3s;
-}
-
-#hero-input:focus {
-    border-color: #5a7ecf;
-    box-shadow: 0 0 15px rgba(59, 89, 152, 0.5);
-}
-
-.hint {
-    font-size: 0.8rem;
-    color: rgba(255, 255, 255, 0.3);
-    margin-top: 10px;
 }
 
 #feedback-msg {
-    margin-top: 20px;
+    margin-top: 15px;
     font-weight: bold;
     min-height: 24px;
 }

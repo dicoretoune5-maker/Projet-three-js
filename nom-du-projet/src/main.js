@@ -3,18 +3,9 @@ import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { DRACOLoader } from "three/examples/jsm/loaders/DRACOLoader.js";
 
-// ==========================================
-// 1. CONFIGURATION DE LA SCÈNE (PRINCIPALE)
-// ==========================================
+// --- SCÈNE ---
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x000000);
-
-let mouseX = 0;
-let mouseY = 0;
-window.addEventListener("mousemove", (event) => {
-  mouseX = (event.clientX / window.innerWidth) * 2 - 1;
-  mouseY = -(event.clientY / window.innerHeight) * 2 + 1;
-});
+scene.background = new THREE.Color(0x050a14); // Rallume un peu le fond
 
 const camera = new THREE.PerspectiveCamera(
   75,
@@ -22,44 +13,34 @@ const camera = new THREE.PerspectiveCamera(
   0.1,
   1000,
 );
-camera.position.z = 40;
+camera.position.z = 35;
 
 const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setSize(window.innerWidth, window.innerHeight);
-renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.setPixelRatio(window.devicePixelRatio);
 document.body.appendChild(renderer.domElement);
 
 scene.add(new THREE.AmbientLight(0xffffff, 2));
 
-// ==========================================
-// 2. LA GALAXIE (VERSION AFFINÉE)
-// ==========================================
+// --- GALAXIE (Étoiles visibles) ---
 const starGeometry = new THREE.BufferGeometry();
-const starCount = 10000;
-const positionArray = new Float32Array(starCount * 3);
-
-for (let i = 0; i < starCount * 3; i++) {
-  positionArray[i] = (Math.random() - 0.5) * 500;
+const posArray = new Float32Array(8000 * 3);
+for (let i = 0; i < 8000 * 3; i++) {
+  posArray[i] = (Math.random() - 0.5) * 500;
 }
-starGeometry.setAttribute(
-  "position",
-  new THREE.BufferAttribute(positionArray, 3),
+starGeometry.setAttribute("position", new THREE.BufferAttribute(posArray, 3));
+const starParticles = new THREE.Points(
+  starGeometry,
+  new THREE.PointsMaterial({
+    size: 0.7, // On les grossit un peu pour qu'elles ne soient plus invisibles
+    color: 0xffffff,
+    transparent: true,
+    opacity: 0.8,
+  }),
 );
-
-const starMaterial = new THREE.PointsMaterial({
-  size: 0.3,
-  color: 0xffffff,
-  transparent: true,
-  opacity: 0.6,
-  sizeAttenuation: true,
-});
-
-const starParticles = new THREE.Points(starGeometry, starMaterial);
 scene.add(starParticles);
 
-// ==========================================
-// 3. CHARGEMENT DES OBJETS 3D
-// ==========================================
+// --- CHARGEMENT ---
 const loader = new GLTFLoader();
 const dracoLoader = new DRACOLoader();
 dracoLoader.setDecoderPath(
@@ -88,20 +69,17 @@ character.forEach(({ file, position, scale }) => {
     const obj = gltf.scene;
     obj.position.set(...position);
     obj.scale.setScalar(scale);
-    obj.userData.name = file;
+    obj.userData.name = file; // C'est ici qu'on donne l'ID à l'objet
     scene.add(obj);
     loadedObjects.push(obj);
   });
 });
 
 const controls = new OrbitControls(camera, renderer.domElement);
-controls.enableDamping = true;
 
 function animate() {
   requestAnimationFrame(animate);
-  starParticles.rotation.y -= 0.0003;
-  scene.rotation.y += (mouseX * 0.05 - scene.rotation.y) * 0.05;
-  scene.rotation.x += (-mouseY * 0.05 - scene.rotation.x) * 0.05;
+  starParticles.rotation.y -= 0.0002;
   const time = Date.now() * 0.001;
   loadedObjects.forEach((obj, i) => {
     obj.position.y += Math.sin(time + i) * 0.005;
@@ -111,33 +89,28 @@ function animate() {
 }
 animate();
 
-// ==========================================
-// 4. MINI-MOTEUR 3D POUR LE POP-UP
-// ==========================================
-let miniRenderer, miniScene, miniCamera, miniControls, miniAnimId;
-
+// --- MINI-VIEWER ---
+let miniRenderer, miniScene, miniCamera, miniAnimId;
 function setupMiniViewer(container, file) {
-  cleanupMiniViewer();
+  if (miniAnimId) cancelAnimationFrame(miniAnimId);
+  if (miniRenderer) {
+    miniRenderer.dispose();
+    miniRenderer.domElement.remove();
+  }
+
   miniScene = new THREE.Scene();
-  miniScene.background = new THREE.Color(0x0a192f);
+  miniScene.background = new THREE.Color(0x1a3365); // Fond bleu pour le carré
   const rect = container.getBoundingClientRect();
-  const width = rect.width || 120;
-  const height = rect.height || 120;
-
-  miniCamera = new THREE.PerspectiveCamera(45, width / height, 0.1, 100);
-  miniCamera.position.z = 5;
-
+  miniCamera = new THREE.PerspectiveCamera(
+    45,
+    rect.width / rect.height,
+    0.1,
+    100,
+  );
   miniRenderer = new THREE.WebGLRenderer({ antialias: true });
-  miniRenderer.setSize(width, height);
+  miniRenderer.setSize(rect.width, rect.height);
   container.appendChild(miniRenderer.domElement);
-
-  miniScene.add(new THREE.AmbientLight(0xffffff, 2.5));
-  const pLight = new THREE.PointLight(0xffffff, 50);
-  pLight.position.set(5, 5, 5);
-  miniScene.add(pLight);
-
-  miniControls = new OrbitControls(miniCamera, miniRenderer.domElement);
-  miniControls.enableZoom = true;
+  miniScene.add(new THREE.AmbientLight(0xffffff, 4));
 
   loader.load(`./${file}`, (gltf) => {
     const model = gltf.scene;
@@ -145,15 +118,16 @@ function setupMiniViewer(container, file) {
     const box = new THREE.Box3().setFromObject(model);
     const center = box.getCenter(new THREE.Vector3());
     model.position.sub(center);
-    const size = box.getSize(new THREE.Vector3());
-    const maxDim = Math.max(size.x, size.y, size.z);
-    miniCamera.position.z = maxDim * 2.8;
+    miniCamera.position.z =
+      Math.max(
+        box.getSize(new THREE.Vector3()).x,
+        box.getSize(new THREE.Vector3()).y,
+      ) * 2.8;
   });
 
   function miniAnimate() {
     miniAnimId = requestAnimationFrame(miniAnimate);
-    if (miniControls) miniControls.update();
-    if (miniRenderer) miniRenderer.render(miniScene, miniCamera);
+    miniRenderer.render(miniScene, miniCamera);
   }
   miniAnimate();
 }
@@ -168,31 +142,24 @@ function cleanupMiniViewer() {
   miniScene = null;
 }
 
-// ==========================================
-// 5. MÉCANIQUE DE JEU
-// ==========================================
+// --- LOGIQUE DE JEU ---
 const corectAnswers = {
-  "superman.glb": ["superman", "clark kent", "clark"],
-  "wonde woman lasso.glb": [
-    "wonder woman",
-    "wonderwoman",
-    "diana prince",
-    "wonde woman",
-  ],
-  "Aquaman tridant.glb": ["aquaman", "arthur curry", "aquaman tridant"],
+  "superman.glb": ["superman", "clark kent"],
+  "Aquaman tridant.glb": ["aquaman", "arthur curry"],
   "arc de arrow.glb": ["green arrow", "arrow", "oliver queen"],
   "bague de flash.glb": ["flash", "the flash", "barry allen"],
   "cape de raven.glb": ["raven", "rachel roth"],
   "costume nightwing.glb": ["nightwing", "dick grayson"],
-  "deathstrke mask.glb": ["deathstroke", "slade wilson", "deathstrke"],
+  "deathstrke mask.glb": ["deathstroke", "slade wilson"],
   "Lobo moto.glb": ["lobo"],
   "masque de bane.glb": ["bane"],
-  "Masque de Fathe.glb": ["doctor fate", "dr fate", "fate", "kent nelson"],
+  "Masque de Fathe.glb": ["doctor fate", "fate", "kent nelson"],
   "massue hawkman (1).glb": ["hawkman", "carter hall"],
+  "wonde woman lasso.glb": ["wonder woman", "diana prince"],
 };
 
-let currentObjectFile = "",
-  score = 0;
+let currentObjectFile = "";
+let score = 0;
 const raycaster = new THREE.Raycaster();
 const pointer = new THREE.Vector2();
 
@@ -205,12 +172,14 @@ window.addEventListener("click", (event) => {
 
   if (intersects.length > 0) {
     let clickedObj = intersects[0].object;
+    // On cherche l'étiquette sur l'objet ou ses parents
     while (clickedObj.parent && !clickedObj.userData.name)
       clickedObj = clickedObj.parent;
 
     if (clickedObj.userData.name) {
       currentObjectFile = clickedObj.userData.name;
-      console.log("Cliqué sur :", currentObjectFile); // Debug utile
+      console.log("Objet cliqué :", currentObjectFile); // <--- REGARDE TA CONSOLE F12
+
       document.getElementById("game-popup").style.display = "flex";
       setTimeout(() => {
         setupMiniViewer(
@@ -232,6 +201,7 @@ document.getElementById("btn-valider").addEventListener("click", () => {
     .trim();
   const feedback = document.getElementById("feedback-msg");
 
+  // On vérifie si la réponse est dans la liste pour CET objet
   if (
     corectAnswers[currentObjectFile] &&
     corectAnswers[currentObjectFile].includes(userInput)
@@ -239,9 +209,12 @@ document.getElementById("btn-valider").addEventListener("click", () => {
     feedback.innerText = "Bravo ! C'est le bon héros.";
     feedback.style.color = "#4ade80";
     score++;
+
+    // Cache l'objet trouvé
     loadedObjects.forEach((obj) => {
       if (obj.userData.name === currentObjectFile) obj.visible = false;
     });
+
     setTimeout(() => {
       document.getElementById("game-popup").style.display = "none";
       cleanupMiniViewer();

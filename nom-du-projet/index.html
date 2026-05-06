@@ -5,16 +5,17 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>DC Game - Univers 3D</title>
-  <link rel="stylesheet" href="popup_reponse.css">
   <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="popup_reponse.css">
 </head>
 
 <body>
   <div id="app"></div>
 
-  <div id="game-popup" class="overlay">
+  <div id="game-popup">
     <div class="quiz-card">
       <button id="close-popup" class="close-btn">&times;</button>
+
       <div class="object-preview" id="mini-viewer"></div>
 
       <div class="quiz-content">
@@ -23,11 +24,11 @@
 
         <div class="input-container">
           <input type="text" id="hero-input" placeholder="Entrez le nom du héros..." autocomplete="off">
-          <div class="input-glow"></div>
         </div>
+
         <p class="hint">Appuie sur Entrée pour valider</p>
         <button id="btn-valider" style="display: none;">Valider</button>
-        <div id="feedback-msg" class="feedback"></div>
+        <div id="feedback-msg"></div>
       </div>
     </div>
   </div>
@@ -35,15 +36,18 @@
   <script type="module" src="/src/main.js"></script>
 
   <script>
+    // Gestion de la touche Entrée pour ne pas avoir à cliquer
     document.addEventListener('DOMContentLoaded', () => {
       const input = document.getElementById('hero-input');
       const btn = document.getElementById('btn-valider');
-      input.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') {
-          e.preventDefault();
-          btn.click();
-        }
-      });
+      if (input && btn) {
+        input.addEventListener('keypress', (e) => {
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            btn.click();
+          }
+        });
+      }
     });
   </script>
 </body>
