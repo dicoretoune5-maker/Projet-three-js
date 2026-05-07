@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="fr">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Explora - Mission Justice League</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="popup_reponse.css">
+</head>
+
+<body>
+  <div id="app"></div>
+
+  <div id="intro-screen" class="text-intro"
+    style="display: flex; flex-direction: column; align-items: center; position: fixed; top: 5%; left: 50%; transform: translateX(-50%); z-index: 50; pointer-events: none; transition: opacity 0.5s ease-out; width: 95%; max-width: 420px;">
+
+    <h1
+      style="color: #4ade80; font-size: 1.5rem; text-transform: uppercase; margin-bottom: 8px; text-shadow: 0 0 10px rgba(74, 222, 128, 0.4); text-align: center; letter-spacing: 1px;">
+      Mission d'Identification
+    </h1>
+
+    <div
+      style="background: rgba(5, 10, 20, 0.7); border: 1px solid rgba(74, 222, 128, 0.3); padding: 12px 20px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.6); text-align: center; backdrop-filter: blur(4px); width: 100%;">
+
+      <p style="font-size: 0.9rem; font-weight: 600; margin-bottom: 8px; color: #ffffff; letter-spacing: 0.5px;">
+        Trouve le héros correspondant à chaque objet.
+      </p>
+
+      <div
+        style="display: flex; justify-content: center; gap: 12px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 8px; margin-top: 8px;">
+        <p style="font-size: 0.8rem; color: #cbd5e1; margin: 0;">
+          <strong style="color: #4ade80;">1.</strong> Clique sur la bulle
+        </p>
+        <p style="font-size: 0.8rem; color: #cbd5e1; margin: 0;">
+          <strong style="color: #4ade80;">2.</strong> Analyse les objets
+        </p>
+      </div>
+
+    </div>
+  </div>
+
+  <div id="game-popup">
+    <div class="quiz-card">
+      <button id="close-popup" class="close-btn">&times;</button>
+
+      <div class="object-preview" id="mini-viewer"></div>
+
+      <div class="quiz-content">
+        <p class="subtitle">Analyse de l'artefact...</p>
+        <h2 id="popup-title">Qui utilise cet objet ?</h2>
+
+        <div class="input-container">
+          <input type="text" id="hero-input" placeholder="Nom du héros..." autocomplete="off">
+        </div>
+
+        <p class="hint">Appuie sur Entrée pour valider</p>
+        <button id="btn-valider" style="display: none;">Valider</button>
+        <div id="feedback-msg"></div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="/src/main.js"></script>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const input = document.getElementById('hero-input');
+      const btn = document.getElementById('btn-valider');
+      if (input && btn) {
+        input.addEventListener('keypress', (e) => {
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            btn.click();
+          }
+        });
+      }
+    });
+  </script>
+</body>
+
+</html>

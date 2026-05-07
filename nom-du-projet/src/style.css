@@ -1,0 +1,103 @@
+/* 1. On empêche la page de scroller et on colle la 3D aux bords */
+body {
+  margin: 0;
+  overflow: hidden;
+  font-family: 'Arial', sans-serif;
+}
+
+/* =========================================
+   LE POP-UP (L'overlay par-dessus la 3D)
+   ========================================= */
+#game-popup {
+  position: absolute;
+  /* SUPER IMPORTANT : Permet de flotter PAR-DESSUS la 3D */
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 5, 20, 0.7);
+  /* Voile bleu nuit très sombre et transparent */
+  backdrop-filter: blur(8px);
+  /* Floute la galaxie en arrière-plan */
+  z-index: 1000;
+  /* Force le pop-up à être au premier plan */
+}
+
+/* La belle carte bleue au centre */
+.popup-content {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  /* Astuce pour centrer parfaitement */
+
+  background: linear-gradient(135deg, #0033aa, #001555);
+  /* Dégradé DC */
+  border: 2px solid #0055ff;
+  border-radius: 20px;
+  padding: 40px;
+  width: 80%;
+  max-width: 400px;
+  text-align: center;
+  box-shadow: 0 0 40px rgba(0, 85, 255, 0.6);
+  /* Halo lumineux */
+  color: white;
+}
+
+/* La petite croix pour fermer */
+#close-popup {
+  position: absolute;
+  top: 15px;
+  right: 20px;
+  font-size: 28px;
+  cursor: pointer;
+  color: #88bbff;
+}
+
+#close-popup:hover {
+  color: white;
+}
+
+/* Le champ de texte pour taper la réponse */
+#hero-input {
+  width: 100%;
+  padding: 15px;
+  margin-bottom: 20px;
+  margin-top: 10px;
+  background: rgba(0, 0, 0, 0.5);
+  border: 2px solid #0055ff;
+  border-radius: 10px;
+  color: white;
+  font-size: 16px;
+  box-sizing: border-box;
+}
+
+#hero-input:focus {
+  outline: none;
+  box-shadow: 0 0 15px rgba(0, 85, 255, 0.8);
+}
+
+/* Le bouton Valider */
+#btn-valider {
+  width: 100%;
+  padding: 15px;
+  background: #0055ff;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-size: 18px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+#btn-valider:hover {
+  background: #3377ff;
+}
+
+/* L'espace pour le message "Bravo" ou "Dommage" */
+#feedback-msg {
+  margin-top: 15px;
+  font-weight: bold;
+  min-height: 20px;
+}
