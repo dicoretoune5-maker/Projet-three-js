@@ -3,6 +3,7 @@ import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { DRACOLoader } from "three/examples/jsm/loaders/DRACOLoader.js";
 
+// --- SCÈNE ET CAMÉRA ---
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x050a14);
 
@@ -21,14 +22,16 @@ const camera = new THREE.PerspectiveCamera(
 );
 camera.position.z = 40;
 
+// --- RENDERER ---
 const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 document.body.appendChild(renderer.domElement);
 
+// --- LUMIÈRES ---
 scene.add(new THREE.AmbientLight(0xffffff, 2));
 
-// --- GALAXIE ---
+// --- GALAXIE DE FOND ---
 const starGeometry = new THREE.BufferGeometry();
 const starCount = 10000;
 const positionArray = new Float32Array(starCount * 3);
@@ -49,12 +52,13 @@ const starParticles = new THREE.Points(starGeometry, starMaterial);
 scene.add(starParticles);
 
 // ==========================================
-// 🔥 LA BULLE D'ÉNERGIE 🔥
+// 🔥 LA NOUVELLE BULLE D'ÉNERGIE 🔥
 // ==========================================
+// Création d'une sphère translucide avec des reflets
 const bubbleGeometry = new THREE.SphereGeometry(28, 64, 64);
 const bubbleMaterial = new THREE.MeshPhysicalMaterial({
-  color: 0x00d4ff,
-  transmission: 0.9,
+  color: 0x00d4ff, // Bleu électrique
+  transmission: 0.9, // Effet verre/transparent
   opacity: 1,
   metalness: 0.1,
   roughness: 0.1,
@@ -67,10 +71,10 @@ const bubbleMaterial = new THREE.MeshPhysicalMaterial({
 let bubble = new THREE.Mesh(bubbleGeometry, bubbleMaterial);
 scene.add(bubble);
 
-let gameStarted = false;
-let isBursting = false;
+let gameStarted = false; // Bloque le jeu tant que la bulle est là
+let isBursting = false; // Pour l'animation d'éclatement
 
-// --- CHARGEMENT DES OBJETS ---
+// --- CHARGEMENT DES OBJETS (GLTF) ---
 const loader = new GLTFLoader();
 const dracoLoader = new DRACOLoader();
 dracoLoader.setDecoderPath(
@@ -100,9 +104,14 @@ character.forEach(({ file, position, scale }) => {
     obj.position.set(...position);
     obj.scale.setScalar(scale);
 
+    // On stocke le nom du fichier dans userData pour l'identifier au clic
     obj.userData.name = file;
+
+    // Appliquer le nom à tous les enfants (Mesh) du modèle pour le raycaster
     obj.traverse((child) => {
-      if (child.isMesh) child.userData.name = file;
+      if (child.isMesh) {
+        child.userData.name = file;
+      }
     });
 
     scene.add(obj);
@@ -110,32 +119,38 @@ character.forEach(({ file, position, scale }) => {
   });
 });
 
+// --- CONTRÔLES ---
 const controls = new OrbitControls(camera, renderer.domElement);
 controls.enableDamping = true;
 
+// --- BOUCLE D'ANIMATION ---
 function animate() {
   requestAnimationFrame(animate);
 
+  // Animation de la galaxie et du tangage de la scène
   starParticles.rotation.y -= 0.0003;
   scene.rotation.y += (mouseX * 0.05 - scene.rotation.y) * 0.05;
   scene.rotation.x += (-mouseY * 0.05 - scene.rotation.x) * 0.05;
 
+  // Flottaison légère des objets
   const time = Date.now() * 0.001;
   loadedObjects.forEach((obj, i) => {
     obj.position.y += Math.sin(time + i) * 0.005;
   });
 
-  // L'animation de la bulle
+  // Animation de la bulle (Rotation et Éclatement)
   if (bubble) {
     if (!isBursting) {
+      // Rotation lente tant que le jeu n'a pas commencé
       bubble.rotation.y += 0.002;
       bubble.rotation.x += 0.001;
     } else {
+      // L'effet d'éclatement : la bulle grossit et devient transparente
       bubble.scale.multiplyScalar(1.08);
       bubble.material.opacity -= 0.05;
       if (bubble.material.opacity <= 0) {
         scene.remove(bubble);
-        bubble = null;
+        bubble = null; // On supprime définitivement la bulle
       }
     }
   }
@@ -145,12 +160,15 @@ function animate() {
 }
 animate();
 
-// --- MINI-VIEWER ---
+// --- MINI-VIEWER (Code précédent conservé) ---
 let miniRenderer, miniScene, miniCamera, miniControls, miniAnimId;
+
 function setupMiniViewer(container, file) {
   cleanupMiniViewer();
+
   miniScene = new THREE.Scene();
   miniScene.background = new THREE.Color(0x0a192f);
+
   const rect = container.getBoundingClientRect();
   const width = rect.width || 120;
   const height = rect.height || 120;
@@ -163,7 +181,9 @@ function setupMiniViewer(container, file) {
   container.appendChild(miniRenderer.domElement);
 
   miniScene.add(new THREE.AmbientLight(0xffffff, 2.5));
-  miniScene.add(new THREE.PointLight(0xffffff, 50).position.set(5, 5, 5));
+  const light = new THREE.PointLight(0xffffff, 50);
+  light.position.set(5, 5, 5);
+  miniScene.add(light);
 
   miniControls = new OrbitControls(miniCamera, miniRenderer.domElement);
   miniControls.enableZoom = true;
@@ -174,11 +194,9 @@ function setupMiniViewer(container, file) {
     const box = new THREE.Box3().setFromObject(model);
     const center = box.getCenter(new THREE.Vector3());
     model.position.sub(center);
-    miniCamera.position.z =
-      Math.max(
-        box.getSize(new THREE.Vector3()).x,
-        box.getSize(new THREE.Vector3()).y,
-      ) * 2.8;
+    const size = box.getSize(new THREE.Vector3());
+    const maxDim = Math.max(size.x, size.y);
+    miniCamera.position.z = maxDim * 2.8;
   });
 
   function miniAnimate() {
@@ -215,37 +233,43 @@ const corectAnswers = {
   "massue hawkman (1).glb": ["hawkman", "carter hall"],
 };
 
-let currentObjectFile = "",
-  score = 0;
+let currentObjectFile = "";
+let score = 0;
+const totalObjects = character.length;
+
 const raycaster = new THREE.Raycaster();
 const pointer = new THREE.Vector2();
 
+// --- GESTION DU CLIC ---
 window.addEventListener("click", (event) => {
+  // Ignorer si un pop-up est ouvert
   if (document.getElementById("game-popup").style.display === "flex") return;
 
   pointer.x = (event.clientX / window.innerWidth) * 2 - 1;
   pointer.y = -(event.clientY / window.innerHeight) * 2 + 1;
   raycaster.setFromCamera(pointer, camera);
 
-  // GESTION DU CLIC SUR LA BULLE AU DÉBUT
+  // 1. SI LE JEU N'A PAS COMMENCÉ : On cherche le clic sur la bulle
   if (!gameStarted) {
     if (bubble) {
       const intersectsBubble = raycaster.intersectObject(bubble);
       if (intersectsBubble.length > 0) {
+        // 💥 ÉCLATEMENT DE LA BULLE !
         isBursting = true;
-        gameStarted = true;
+        gameStarted = true; // Le jeu commence !
 
-        const introScreen = document.getElementById("intro-screen");
-        if (introScreen) {
-          introScreen.style.opacity = "0";
-          setTimeout(() => (introScreen.style.display = "none"), 500);
+        // On cache le texte d'intro "Clique sur la bulle..."
+        const textIntro = document.querySelector(".text-intro");
+        if (textIntro) {
+          textIntro.style.opacity = "0";
+          setTimeout(() => (textIntro.style.display = "none"), 500);
         }
       }
     }
-    return;
+    return; // On arrête là, on ne peut pas cliquer sur les objets tant que la bulle est là
   }
 
-  // GESTION DU CLIC SUR LES OBJETS (Après éclatement)
+  // 2. SI LE JEU A COMMENCÉ : On cherche le clic sur les objets 3D
   const intersects = raycaster.intersectObjects(loadedObjects, true);
 
   if (intersects.length > 0) {
@@ -253,6 +277,7 @@ window.addEventListener("click", (event) => {
     if (clickedObj.userData.name) {
       currentObjectFile = clickedObj.userData.name;
 
+      // Ouvrir le pop-up et le mini-viewer
       document.getElementById("game-popup").style.display = "flex";
       setTimeout(() => {
         setupMiniViewer(
@@ -261,6 +286,7 @@ window.addEventListener("click", (event) => {
         );
       }, 100);
 
+      // Reset input et feedback
       document.getElementById("feedback-msg").innerText = "";
       document.getElementById("hero-input").value = "";
       document.getElementById("hero-input").focus();
@@ -268,6 +294,7 @@ window.addEventListener("click", (event) => {
   }
 });
 
+// --- LOGIQUE DE VALIDATION ---
 document.getElementById("btn-valider").addEventListener("click", () => {
   const userInput = document
     .getElementById("hero-input")
@@ -279,30 +306,41 @@ document.getElementById("btn-valider").addEventListener("click", () => {
     corectAnswers[currentObjectFile] &&
     corectAnswers[currentObjectFile].includes(userInput)
   ) {
+    // BONNE RÉPONSE
     feedback.innerText = "Bravo ! C'est le bon héros.";
-    feedback.style.color = "#4ade80";
+    feedback.style.color = "#4ade80"; // Vert
     score++;
 
+    // Faire disparaître l'objet correspondant dans la scène
     loadedObjects.forEach((obj) => {
-      if (obj.userData.name === currentObjectFile) obj.visible = false;
+      if (obj.userData.name === currentObjectFile) {
+        obj.visible = false;
+      }
     });
 
+    // Fermer le pop-up après un délai et vérifier la fin du jeu
     setTimeout(() => {
       document.getElementById("game-popup").style.display = "none";
       cleanupMiniViewer();
-      if (score === character.length) window.location.href = "page_de_fin.html";
+      // Si tous les objets ont été trouvés, on va à la page de fin
+      if (score === totalObjects) {
+        window.location.href = "page_de_fin.html";
+      }
     }, 1500);
   } else {
+    // MAUVAISE RÉPONSE
     feedback.innerText = "Dommage, réessaie !";
-    feedback.style.color = "#f87171";
+    feedback.style.color = "#f87171"; // Rouge
   }
 });
 
+// --- FERMER LE POP-UP ---
 document.getElementById("close-popup").addEventListener("click", () => {
   document.getElementById("game-popup").style.display = "none";
   cleanupMiniViewer();
 });
 
+// --- RESIZE ---
 window.addEventListener("resize", () => {
   camera.aspect = window.innerWidth / window.innerHeight;
   camera.updateProjectionMatrix();
