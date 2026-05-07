@@ -3,9 +3,15 @@ import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { DRACOLoader } from "three/examples/jsm/loaders/DRACOLoader.js";
 
-// --- SCÈNE ---
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x050a14); // Rallume un peu le fond
+scene.background = new THREE.Color(0x050a14);
+
+let mouseX = 0,
+  mouseY = 0;
+window.addEventListener("mousemove", (event) => {
+  mouseX = (event.clientX / window.innerWidth) * 2 - 1;
+  mouseY = -(event.clientY / window.innerHeight) * 2 + 1;
+});
 
 const camera = new THREE.PerspectiveCamera(
   75,
@@ -13,34 +19,58 @@ const camera = new THREE.PerspectiveCamera(
   0.1,
   1000,
 );
-camera.position.z = 35;
+camera.position.z = 40;
 
 const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setSize(window.innerWidth, window.innerHeight);
-renderer.setPixelRatio(window.devicePixelRatio);
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 document.body.appendChild(renderer.domElement);
 
 scene.add(new THREE.AmbientLight(0xffffff, 2));
 
-// --- GALAXIE (Étoiles visibles) ---
+// --- GALAXIE ---
 const starGeometry = new THREE.BufferGeometry();
-const posArray = new Float32Array(8000 * 3);
-for (let i = 0; i < 8000 * 3; i++) {
-  posArray[i] = (Math.random() - 0.5) * 500;
-}
-starGeometry.setAttribute("position", new THREE.BufferAttribute(posArray, 3));
-const starParticles = new THREE.Points(
-  starGeometry,
-  new THREE.PointsMaterial({
-    size: 0.7, // On les grossit un peu pour qu'elles ne soient plus invisibles
-    color: 0xffffff,
-    transparent: true,
-    opacity: 0.8,
-  }),
+const starCount = 10000;
+const positionArray = new Float32Array(starCount * 3);
+for (let i = 0; i < starCount * 3; i++)
+  positionArray[i] = (Math.random() - 0.5) * 500;
+starGeometry.setAttribute(
+  "position",
+  new THREE.BufferAttribute(positionArray, 3),
 );
+const starMaterial = new THREE.PointsMaterial({
+  size: 0.6,
+  color: 0xffffff,
+  transparent: true,
+  opacity: 0.8,
+  sizeAttenuation: true,
+});
+const starParticles = new THREE.Points(starGeometry, starMaterial);
 scene.add(starParticles);
 
-// --- CHARGEMENT ---
+// ==========================================
+// 🔥 LA BULLE D'ÉNERGIE 🔥
+// ==========================================
+const bubbleGeometry = new THREE.SphereGeometry(28, 64, 64);
+const bubbleMaterial = new THREE.MeshPhysicalMaterial({
+  color: 0x00d4ff,
+  transmission: 0.9,
+  opacity: 1,
+  metalness: 0.1,
+  roughness: 0.1,
+  ior: 1.5,
+  thickness: 0.5,
+  specularIntensity: 2,
+  transparent: true,
+  side: THREE.DoubleSide,
+});
+let bubble = new THREE.Mesh(bubbleGeometry, bubbleMaterial);
+scene.add(bubble);
+
+let gameStarted = false;
+let isBursting = false;
+
+// --- CHARGEMENT DES OBJETS ---
 const loader = new GLTFLoader();
 const dracoLoader = new DRACOLoader();
 dracoLoader.setDecoderPath(
@@ -50,18 +80,18 @@ loader.setDRACOLoader(dracoLoader);
 
 const loadedObjects = [];
 const character = [
-  { file: "superman.glb", position: [0, 8, -10], scale: 3 },
-  { file: "wonde woman lasso.glb", position: [0, -6, -5], scale: 5 },
-  { file: "Aquaman tridant.glb", position: [12, 2, -10], scale: 2 },
-  { file: "arc de arrow.glb", position: [-12, 2, -10], scale: 5 },
-  { file: "bague de flash.glb", position: [7, 12, -15], scale: 5 },
-  { file: "cape de raven.glb", position: [-7, 12, -15], scale: 5 },
-  { file: "costume nightwing.glb", position: [18, -4, -12], scale: 2 },
-  { file: "deathstrke mask.glb", position: [-18, -4, -12], scale: 2 },
-  { file: "Lobo moto.glb", position: [8, -12, -15], scale: 1 },
-  { file: "masque de bane.glb", position: [-15, 20, -5], scale: 5 },
-  { file: "Masque de Fathe.glb", position: [24, 6, -18], scale: 5 },
-  { file: "massue hawkman (1).glb", position: [-30, 10, 0], scale: 5 },
+  { file: "superman.glb", position: [0, 10, -10], scale: 3 },
+  { file: "wonder woman lasso.glb", position: [0, -10, -10], scale: 5 },
+  { file: "Aquaman tridant.glb", position: [12, 8, -10], scale: 3 },
+  { file: "arc de arrow.glb", position: [-12, 8, -10], scale: 5 },
+  { file: "bague de flash.glb", position: [18, 0, -10], scale: 5 },
+  { file: "cape de raven.glb", position: [-18, 0, -10], scale: 5 },
+  { file: "costume nightwing.glb", position: [12, -8, -10], scale: 3 },
+  { file: "deathstrke mask.glb", position: [-12, -8, -10], scale: 3 },
+  { file: "Lobo moto.glb", position: [8, 0, -10], scale: 4 },
+  { file: "masque de bane.glb", position: [-8, 0, -10], scale: 5 },
+  { file: "Masque de Fathe.glb", position: [15, 8, -10], scale: 5 },
+  { file: "massue hawkman (1).glb", position: [-15, 8, -10], scale: 5 },
 ];
 
 character.forEach(({ file, position, scale }) => {
@@ -69,48 +99,74 @@ character.forEach(({ file, position, scale }) => {
     const obj = gltf.scene;
     obj.position.set(...position);
     obj.scale.setScalar(scale);
-    obj.userData.name = file; // C'est ici qu'on donne l'ID à l'objet
+
+    obj.userData.name = file;
+    obj.traverse((child) => {
+      if (child.isMesh) child.userData.name = file;
+    });
+
     scene.add(obj);
     loadedObjects.push(obj);
   });
 });
 
 const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
 
 function animate() {
   requestAnimationFrame(animate);
-  starParticles.rotation.y -= 0.0002;
+
+  starParticles.rotation.y -= 0.0003;
+  scene.rotation.y += (mouseX * 0.05 - scene.rotation.y) * 0.05;
+  scene.rotation.x += (-mouseY * 0.05 - scene.rotation.x) * 0.05;
+
   const time = Date.now() * 0.001;
   loadedObjects.forEach((obj, i) => {
     obj.position.y += Math.sin(time + i) * 0.005;
   });
+
+  // L'animation de la bulle
+  if (bubble) {
+    if (!isBursting) {
+      bubble.rotation.y += 0.002;
+      bubble.rotation.x += 0.001;
+    } else {
+      bubble.scale.multiplyScalar(1.08);
+      bubble.material.opacity -= 0.05;
+      if (bubble.material.opacity <= 0) {
+        scene.remove(bubble);
+        bubble = null;
+      }
+    }
+  }
+
   controls.update();
   renderer.render(scene, camera);
 }
 animate();
 
 // --- MINI-VIEWER ---
-let miniRenderer, miniScene, miniCamera, miniAnimId;
+let miniRenderer, miniScene, miniCamera, miniControls, miniAnimId;
 function setupMiniViewer(container, file) {
-  if (miniAnimId) cancelAnimationFrame(miniAnimId);
-  if (miniRenderer) {
-    miniRenderer.dispose();
-    miniRenderer.domElement.remove();
-  }
-
+  cleanupMiniViewer();
   miniScene = new THREE.Scene();
-  miniScene.background = new THREE.Color(0x1a3365); // Fond bleu pour le carré
+  miniScene.background = new THREE.Color(0x0a192f);
   const rect = container.getBoundingClientRect();
-  miniCamera = new THREE.PerspectiveCamera(
-    45,
-    rect.width / rect.height,
-    0.1,
-    100,
-  );
+  const width = rect.width || 120;
+  const height = rect.height || 120;
+
+  miniCamera = new THREE.PerspectiveCamera(45, width / height, 0.1, 100);
+  miniCamera.position.z = 5;
+
   miniRenderer = new THREE.WebGLRenderer({ antialias: true });
-  miniRenderer.setSize(rect.width, rect.height);
+  miniRenderer.setSize(width, height);
   container.appendChild(miniRenderer.domElement);
-  miniScene.add(new THREE.AmbientLight(0xffffff, 4));
+
+  miniScene.add(new THREE.AmbientLight(0xffffff, 2.5));
+  miniScene.add(new THREE.PointLight(0xffffff, 50).position.set(5, 5, 5));
+
+  miniControls = new OrbitControls(miniCamera, miniRenderer.domElement);
+  miniControls.enableZoom = true;
 
   loader.load(`./${file}`, (gltf) => {
     const model = gltf.scene;
@@ -127,7 +183,8 @@ function setupMiniViewer(container, file) {
 
   function miniAnimate() {
     miniAnimId = requestAnimationFrame(miniAnimate);
-    miniRenderer.render(miniScene, miniCamera);
+    if (miniControls) miniControls.update();
+    if (miniRenderer) miniRenderer.render(miniScene, miniCamera);
   }
   miniAnimate();
 }
@@ -144,7 +201,8 @@ function cleanupMiniViewer() {
 
 // --- LOGIQUE DE JEU ---
 const corectAnswers = {
-  "superman.glb": ["superman", "clark kent"],
+  "superman.glb": ["superman", "clark kent", "clark"],
+  "wonder woman lasso.glb": ["wonder woman", "wonderwoman", "diana prince"],
   "Aquaman tridant.glb": ["aquaman", "arthur curry"],
   "arc de arrow.glb": ["green arrow", "arrow", "oliver queen"],
   "bague de flash.glb": ["flash", "the flash", "barry allen"],
@@ -153,32 +211,47 @@ const corectAnswers = {
   "deathstrke mask.glb": ["deathstroke", "slade wilson"],
   "Lobo moto.glb": ["lobo"],
   "masque de bane.glb": ["bane"],
-  "Masque de Fathe.glb": ["doctor fate", "fate", "kent nelson"],
+  "Masque de Fathe.glb": ["doctor fate", "dr fate", "fate", "kent nelson"],
   "massue hawkman (1).glb": ["hawkman", "carter hall"],
-  "wonde woman lasso.glb": ["wonder woman", "diana prince"],
 };
 
-let currentObjectFile = "";
-let score = 0;
+let currentObjectFile = "",
+  score = 0;
 const raycaster = new THREE.Raycaster();
 const pointer = new THREE.Vector2();
 
 window.addEventListener("click", (event) => {
   if (document.getElementById("game-popup").style.display === "flex") return;
+
   pointer.x = (event.clientX / window.innerWidth) * 2 - 1;
   pointer.y = -(event.clientY / window.innerHeight) * 2 + 1;
   raycaster.setFromCamera(pointer, camera);
+
+  // GESTION DU CLIC SUR LA BULLE AU DÉBUT
+  if (!gameStarted) {
+    if (bubble) {
+      const intersectsBubble = raycaster.intersectObject(bubble);
+      if (intersectsBubble.length > 0) {
+        isBursting = true;
+        gameStarted = true;
+
+        const introScreen = document.getElementById("intro-screen");
+        if (introScreen) {
+          introScreen.style.opacity = "0";
+          setTimeout(() => (introScreen.style.display = "none"), 500);
+        }
+      }
+    }
+    return;
+  }
+
+  // GESTION DU CLIC SUR LES OBJETS (Après éclatement)
   const intersects = raycaster.intersectObjects(loadedObjects, true);
 
   if (intersects.length > 0) {
-    let clickedObj = intersects[0].object;
-    // On cherche l'étiquette sur l'objet ou ses parents
-    while (clickedObj.parent && !clickedObj.userData.name)
-      clickedObj = clickedObj.parent;
-
+    const clickedObj = intersects[0].object;
     if (clickedObj.userData.name) {
       currentObjectFile = clickedObj.userData.name;
-      console.log("Objet cliqué :", currentObjectFile); // <--- REGARDE TA CONSOLE F12
 
       document.getElementById("game-popup").style.display = "flex";
       setTimeout(() => {
@@ -187,6 +260,7 @@ window.addEventListener("click", (event) => {
           currentObjectFile,
         );
       }, 100);
+
       document.getElementById("feedback-msg").innerText = "";
       document.getElementById("hero-input").value = "";
       document.getElementById("hero-input").focus();
@@ -201,7 +275,6 @@ document.getElementById("btn-valider").addEventListener("click", () => {
     .trim();
   const feedback = document.getElementById("feedback-msg");
 
-  // On vérifie si la réponse est dans la liste pour CET objet
   if (
     corectAnswers[currentObjectFile] &&
     corectAnswers[currentObjectFile].includes(userInput)
@@ -210,7 +283,6 @@ document.getElementById("btn-valider").addEventListener("click", () => {
     feedback.style.color = "#4ade80";
     score++;
 
-    // Cache l'objet trouvé
     loadedObjects.forEach((obj) => {
       if (obj.userData.name === currentObjectFile) obj.visible = false;
     });

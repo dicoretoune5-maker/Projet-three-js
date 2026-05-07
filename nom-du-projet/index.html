@@ -12,6 +12,11 @@
 <body>
   <div id="app"></div>
 
+  <div id="intro-screen">
+    <h1>Mission : Justice League</h1>
+    <p>Clique sur la bulle d'énergie pour libérer les objets de nos héros !</p>
+  </div>
+
   <div id="game-popup">
     <div class="quiz-card">
       <button id="close-popup" class="close-btn">&times;</button>
@@ -36,7 +41,6 @@
   <script type="module" src="/src/main.js"></script>
 
   <script>
-    // Gestion de la touche Entrée pour ne pas avoir à cliquer
     document.addEventListener('DOMContentLoaded', () => {
       const input = document.getElementById('hero-input');
       const btn = document.getElementById('btn-valider');
