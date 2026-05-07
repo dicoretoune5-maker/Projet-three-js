@@ -32,16 +32,15 @@ signupTab.addEventListener("click", () => {
   btnAction.innerText = "Créer mon compte";
 });
 
-// 3. SIMULATION DE CONNEXION
+// 3. SIMULATION DE CONNEXION ET REDIRECTION
 document.getElementById("auth-form").addEventListener("submit", (e) => {
-  // 1. On empêche la page de se recharger dans le vide
+  // 1. On empêche la page de se recharger
   e.preventDefault();
 
-  // 2. Ton message de succès
-  alert(
-    "Bravo ! Votre progression est maintenant sauvegardée. Préparez-vous à jouer !",
-  );
+  // 2. Message de succès (Optionnel, tu peux le laisser ou l'enlever)
+  // alert("Bravo ! Votre progression est maintenant sauvegardée. Préparez-vous à jouer !");
 
-  // 3. LA REDIRECTION MAGIQUE vers ta page 3D (index.html)
-  window.location.href = "index.html";
+  // 3. LA REDIRECTION vers ta page 3D
+  // Note : on utilise "jeu.html" car c'est le nouveau nom de ton fichier galaxie
+  window.location.href = "jeu.html";
 });

@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="fr">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DC Game - Univers 3D</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="popup_reponse.css">
+</head>
+
+<body>
+  <div id="app"></div>
+
+  <div id="intro-screen">
+    <h1>Mission : Justice League</h1>
+    <p>Clique sur la bulle d'énergie pour libérer les objets de nos héros !</p>
+  </div>
+
+  <div id="game-popup">
+    <div class="quiz-card">
+      <button id="close-popup" class="close-btn">&times;</button>
+
+      <div class="object-preview" id="mini-viewer"></div>
+
+      <div class="quiz-content">
+        <p class="subtitle">À quel héros appartient cet objet ?</p>
+        <h2 id="popup-title">Qui utilise cet objet ?</h2>
+
+        <div class="input-container">
+          <input type="text" id="hero-input" placeholder="Entrez le nom du héros..." autocomplete="off">
+        </div>
+
+        <p class="hint">Appuie sur Entrée pour valider</p>
+        <button id="btn-valider" style="display: none;">Valider</button>
+        <div id="feedback-msg"></div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="/src/main.js"></script>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const input = document.getElementById('hero-input');
+      const btn = document.getElementById('btn-valider');
+      if (input && btn) {
+        input.addEventListener('keypress', (e) => {
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            btn.click();
+          }
+        });
+      }
+    });
+  </script>
+</body>
+
+</html>

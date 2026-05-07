@@ -1,59 +1,50 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="fr">
 
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>DC Game - Univers 3D</title>
-  <link rel="stylesheet" href="style.css">
-  <link rel="stylesheet" href="popup_reponse.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DC - Find The Hero</title>
+    <link rel="stylesheet" href="acceuil.css">
 </head>
 
 <body>
-  <div id="app"></div>
 
-  <div id="intro-screen">
-    <h1>Mission : Justice League</h1>
-    <p>Clique sur la bulle d'énergie pour libérer les objets de nos héros !</p>
-  </div>
+    <div class="slide-container">
+        <!-- Section Logo -->
+        <header class="logo-container">
+            <!-- Remplacez "logo-dc.png" par le chemin de votre logo -->
+            <img src="logo DC avec arrière-plan supprimé.png" alt="Logo DC" class="logo">
+        </header>
 
-  <div id="game-popup">
-    <div class="quiz-card">
-      <button id="close-popup" class="close-btn">&times;</button>
+        <!-- Section Titre et Bouton -->
+        <main class="content">
+            <h1 class="title">FIND THE HERO</h1>
+            <a href="page_connexion.html" class="btn-play">Let's play</a>
+        </main>
 
-      <div class="object-preview" id="mini-viewer"></div>
+        <!-- Section des Images (3 Groupes) -->
+        <div class="hero-groups">
 
-      <div class="quiz-content">
-        <p class="subtitle">À quel héros appartient cet objet ?</p>
-        <h2 id="popup-title">Qui utilise cet objet ?</h2>
+            <!-- Groupe 1 : Gauche (Harley Quinn) -->
+            <div class="group left">
+                <img src="harley Q avec arrière-plan supprimé.png" alt="Harley Quinn" class="hero-img">
+            </div>
 
-        <div class="input-container">
-          <input type="text" id="hero-input" placeholder="Entrez le nom du héros..." autocomplete="off">
+            <!-- Groupe 2 : Centre (Justice League) -->
+            <div class="group center">
+                <img src="perso DC avec arrière-plan supprimé.png" alt="Justice League" class="hero-img">
+            </div>
+
+            <!-- Groupe 3 : Droite (Héros Comics) -->
+            <div class="group right">
+                <img src="personnage dc 2 avec arrière-plan supprimé.png" alt="Comics Heroes" class="hero-img">
+            </div>
+
         </div>
-
-        <p class="hint">Appuie sur Entrée pour valider</p>
-        <button id="btn-valider" style="display: none;">Valider</button>
-        <div id="feedback-msg"></div>
-      </div>
     </div>
-  </div>
 
-  <script type="module" src="/src/main.js"></script>
-
-  <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      const input = document.getElementById('hero-input');
-      const btn = document.getElementById('btn-valider');
-      if (input && btn) {
-        input.addEventListener('keypress', (e) => {
-          if (e.key === 'Enter') {
-            e.preventDefault();
-            btn.click();
-          }
-        });
-      }
-    });
-  </script>
+    <script src="acceuil.js"></script>
 </body>
 
 </html>
